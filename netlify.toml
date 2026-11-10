@@ -1,0 +1,13 @@
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+
+# Front chama /api/<nome> e o Netlify repassa para a function.
+# Evita CORS e esconde a URL real da function.
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
