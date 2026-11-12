@@ -1,13 +1,4 @@
+# Enquanto a landing nao e migrada para o Next (task T-003), o Netlify publica
+# apenas o site estatico em legacy-site/. Nada fora dessa pasta vai para o ar.
 [build]
-  publish = "."
-  functions = "netlify/functions"
-
-[functions]
-  node_bundler = "esbuild"
-
-# Front chama /api/<nome> e o Netlify repassa para a function.
-# Evita CORS e esconde a URL real da function.
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
+  publish = "legacy-site"
