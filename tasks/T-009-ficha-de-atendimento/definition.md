@@ -36,6 +36,7 @@ A ficha é a principal fonte de contexto sobre a cliente, para a consultora e pa
 ## Insumos e perguntas em aberto
 
 - Lista de perguntas da ficha, fornecida pela Alliny. Sem ela a task fica em rascunho.
+  - Recebida em 2026-11-13 e registrada em [perguntas.md](perguntas.md), sem as respostas. As dúvidas de estrutura foram decididas pelo Breno na mesma data e estão no arquivo.
 
 ## Notas para o architect
 

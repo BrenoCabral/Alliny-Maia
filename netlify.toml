@@ -2,3 +2,9 @@
 # apenas o site estatico em legacy-site/. Nada fora dessa pasta vai para o ar.
 [build]
   publish = "legacy-site"
+
+# O repositorio passou a ter um package.json com next na raiz (T-001). Esta
+# variavel impede o adaptador do Next (@netlify/plugin-nextjs) de rodar antes
+# da hora. A T-003 remove.
+[build.environment]
+  NETLIFY_NEXT_PLUGIN_SKIP = "true"

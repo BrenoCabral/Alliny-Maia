@@ -1,0 +1,18 @@
+/*
+ * Tokens da marca. Origem: variaveis CSS de legacy-site/index.html.
+ * "static" faz o Tailwind publicar todos os tokens em :root, mesmo os que
+ * nenhuma classe usa ainda.
+ */
+@theme static {
+  --color-brand-green: #1f3f1a;
+  --color-brand-cream: #efe6d6;
+  --color-brand-paper: #fbf6ec;
+  --color-brand-ink: #23231e;
+  --color-brand-gold: #c9a46a;
+}
+
+/* --font-playfair e --font-montserrat sao definidas em src/styles/fonts.ts. */
+@theme inline static {
+  --font-display: var(--font-playfair), Georgia, serif;
+  --font-sans: var(--font-montserrat), "Helvetica Neue", Arial, sans-serif;
+}

@@ -28,7 +28,7 @@ TypeScript `strict`, Next.js (App Router), Tailwind, react-hook-form e zod, Supa
 
 ## Comandos
 
-Disponíveis depois das tasks T-001 e T-002. Detalhes em `docs/SETUP.md`.
+`dev` e `check` já funcionam. Os comandos `db:*` chegam na T-002 e `test:e2e` chega com os testes de ponta a ponta. Detalhes em `docs/SETUP.md`.
 
 ```
 npm run dev          app local
@@ -62,4 +62,4 @@ npm run test:e2e     testes de ponta a ponta
 
 ## Estado atual
 
-O repositório contém o plano e o site estático em `legacy-site/`, que é o que o Netlify publica hoje. O app Next ainda não existe: ele nasce na T-001.
+O app Next existe na raiz desde a T-001, com as ferramentas de qualidade e uma página provisória em `/`. O Netlify continua publicando só o site estático em `legacy-site/`, até a T-003. O Supabase local chega na T-002.

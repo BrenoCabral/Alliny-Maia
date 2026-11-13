@@ -11,6 +11,12 @@ test-results/
 !.env.example
 supabase/.branches/
 supabase/.temp/
+next-env.d.ts
+*.tsbuildinfo
+.vs/
+npm-debug.log*
+
+# Editores
 
 # Editores
 .vs/

@@ -15,7 +15,7 @@ pm  ->  architect  ->  dev-planner  ->  dev-implementer
 | 3 | `dev-planner` | Quais passos, em que arquivos, com quais testes? | `definition.md`, `architecture.md`, código | `tasks/T-XXX-slug/implementation.md` |
 | 4 | `dev-implementer` | Está feito e verificado? | os três documentos da task | código, testes, registro no `implementation.md`, `BACKLOG.md` |
 
-Os agentes ficam em `.claude/agents/`. Cada um roda como subagente, com contexto próprio. O que passa de um para o outro é o que está escrito na pasta da task, por isso cada documento precisa se sustentar sozinho.
+Os agentes ficam em `.claude/agents/`, registrados com o prefixo do projeto: `allinymaia-pm`, `allinymaia-architect`, `allinymaia-dev-planner` e `allinymaia-dev-implementer`. Neste documento eles aparecem pelo nome curto do papel. Cada um roda como subagente, com contexto próprio. O que passa de um para o outro é o que está escrito na pasta da task, por isso cada documento precisa se sustentar sozinho.
 
 ## Como rodar
 

@@ -11,7 +11,6 @@ Fonte oficial do que fazer e em que ordem. O processo está em `agent-pipeline.m
 
 ### Fase 0. Fundação
 
-- [ ] **T-001** Scaffold do app Next.js e ferramentas. [definição](tasks/T-001-scaffold-next/definition.md) · [pasta](tasks/T-001-scaffold-next/)
 - [ ] **T-002** Supabase local e base de desenvolvimento. [definição](tasks/T-002-supabase-local/definition.md) · [pasta](tasks/T-002-supabase-local/)
 - [ ] **T-003** Landing no Next e deploy no Netlify. [definição](tasks/T-003-landing-no-next/definition.md) · [pasta](tasks/T-003-landing-no-next/)
 - [ ] **T-004** CI no GitHub Actions. [definição](tasks/T-004-ci-github-actions/definition.md) · [pasta](tasks/T-004-ci-github-actions/)
@@ -32,6 +31,7 @@ Fonte oficial do que fazer e em que ordem. O processo está em `agent-pipeline.m
 
 - [ ] **T-011** Arquivos e imagens das clientes. [definição](tasks/T-011-arquivos-e-imagens/definition.md) · [pasta](tasks/T-011-arquivos-e-imagens/)
 - [ ] **T-012** Modelo do dossiê e registro de seções. [definição](tasks/T-012-modelo-do-dossie/definition.md) · [pasta](tasks/T-012-modelo-do-dossie/)
+- [ ] **T-025** Catálogo de produtos. [definição](tasks/T-025-catalogo-de-produtos/definition.md) · [pasta](tasks/T-025-catalogo-de-produtos/)
 - [ ] **T-013** Design e renderização do dossiê. [definição](tasks/T-013-design-e-render-do-dossie/definition.md) · [pasta](tasks/T-013-design-e-render-do-dossie/)
 - [ ] **T-014** Editor do dossiê no painel. [definição](tasks/T-014-editor-do-dossie/definition.md) · [pasta](tasks/T-014-editor-do-dossie/)
 - [ ] **T-015** Área da cliente e Meu dossiê. [definição](tasks/T-015-area-da-cliente/definition.md) · [pasta](tasks/T-015-area-da-cliente/)
@@ -58,4 +58,4 @@ Fonte oficial do que fazer e em que ordem. O processo está em `agent-pipeline.m
 
 Mais recentes primeiro. Formato: `- [x] **T-XXX** Título. [definição](...) · [pasta](...) · concluída em AAAA-MM-DD`
 
-_Nenhuma ainda._
+- [x] **T-001** Scaffold do app Next.js e ferramentas. [definição](tasks/T-001-scaffold-next/definition.md) · [pasta](tasks/T-001-scaffold-next/) · concluída em 2026-11-13
