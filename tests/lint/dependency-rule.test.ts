@@ -77,3 +77,34 @@ describe("regra de dependência app/mcp -> modules -> lib", () => {
     expect(messages).toHaveLength(0);
   });
 });
+
+describe("client admin do Supabase só em service.ts de módulo", () => {
+  // A regra ignora import que não resolve: estes casos dependem de
+  // src/lib/supabase/admin.ts existir.
+  const code = 'import "@/lib/supabase/admin";\n';
+
+  it("acusa o import fora de service.ts", async () => {
+    for (const filePath of [
+      "src/app/example.tsx",
+      "src/mcp/example.ts",
+      "src/modules/clients/repository.ts",
+      "src/modules/clients/actions.ts",
+      "src/modules/clients/service.test.ts",
+      "src/modules/clients/components/example.tsx",
+      "src/lib/supabase/server.ts",
+      "src/proxy.ts",
+    ]) {
+      const messages = await restrictedImportMessages(code, filePath);
+      expect(messages, filePath).toHaveLength(1);
+      expect(messages[0], filePath).toContain("client admin do Supabase");
+    }
+  });
+
+  it("aceita o import em service.ts de módulo", async () => {
+    const messages = await restrictedImportMessages(
+      code,
+      "src/modules/clients/service.ts",
+    );
+    expect(messages).toHaveLength(0);
+  });
+});

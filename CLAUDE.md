@@ -21,6 +21,7 @@ Antes de qualquer trabalho de desenvolvimento, leia `agent-pipeline.md` e siga a
 | `docs/PLANO.md` | Fases, insumos, riscos, definição de pronto |
 | `docs/adr/` | Decisões de arquitetura e alternativas descartadas |
 | `docs/SETUP.md` | Ambiente local e comandos |
+| `docs/TESTES-MANUAIS.md` | O que o Breno confere na mão, por task |
 
 ## Stack
 

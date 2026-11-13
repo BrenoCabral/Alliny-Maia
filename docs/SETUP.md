@@ -4,8 +4,7 @@
 
 - Git
 - Node.js 26 (a versão fica em `.nvmrc`). Com nvm: `nvm use`.
-- Docker Desktop em execução (necessário a partir da T-002)
-- Supabase CLI (necessário a partir da T-002)
+- Docker Desktop em execução
 - VS Code com as extensões recomendadas em `.vscode/extensions.json`
 - Claude Code
 
@@ -18,7 +17,7 @@ npm install
 npm run dev
 ```
 
-O app abre em `http://localhost:3000`. Por enquanto ele mostra uma página provisória: a landing chega na T-003.
+O app abre em `http://localhost:3000`. Ele mostra a landing do site.
 
 O `npm install` mostra avisos `ERESOLVE overriding peer dependency`. São esperados (o `eslint-plugin-import` ainda não declara suporte ao ESLint 10). Não use `--legacy-peer-deps` nem `--force`.
 
@@ -45,28 +44,79 @@ O lint impõe a regra de dependência `app/mcp -> modules -> lib`. Detalhes em `
 
 O build baixa as fontes do Google, então precisa de internet.
 
-## A partir da T-002
+## Banco local (Supabase)
 
-Estes comandos ainda não existem. Os nomes são fixados na task que cria cada um.
+O Supabase CLI vem no `npm install`, como dependência de desenvolvimento. Não precisa de instalação global. Todos os comandos abaixo falam só com a stack local em Docker.
+
+| Comando | Faz |
+| --- | --- |
+| `npm run db:start` | Sobe o Supabase local em Docker. A primeira vez baixa as imagens (cerca de 9 GB) |
+| `npm run db:stop` | Para os containers e mantém os dados |
+| `npm run db:reset` | Recria o banco, aplica migrations e seed |
+| `npm run db:types` | Regenera `src/lib/supabase/database.types.ts`. Exige a stack de pé |
+| `npm run db:test` | Roda os testes de banco (pgTAP) de `supabase/tests/` |
+
+Primeiro uso:
+
+1. Abra o Docker Desktop.
+2. `npm run db:start`
+3. Crie o `.env.local` (seção "Variáveis de ambiente").
+4. `npm run dev` e abra `http://localhost:3000/api/dev/health`. A resposta esperada tem `"ok": true`.
+
+| Serviço | Endereço |
+| --- | --- |
+| API | `http://127.0.0.1:54321` |
+| Banco (Postgres) | `127.0.0.1:54322` |
+| Studio (painel do banco) | `http://127.0.0.1:54323` |
+| Caixa de entrada de e-mails de teste | `http://127.0.0.1:54324` |
+
+A rota `/api/dev/health` é um diagnóstico de conexão. Só existe em desenvolvimento: em build de produção responde 404. Quando falta variável ou a stack está parada, responde 503 e diz o que falhou.
+
+Avisos:
+
+- Depois de mudar o schema: `npm run db:reset`, `npm run db:types` e commit dos tipos gerados.
+- Se o `db:types` falhar, ele deixa o arquivo de tipos vazio. Recupere com `git checkout -- src/lib/supabase/database.types.ts` e suba a stack.
+- Os containers têm o mesmo nome em qualquer worktree. Só existe um banco local na máquina: quem troca de worktree roda `npm run db:reset` no worktree em que vai trabalhar. Cada worktree precisa do próprio `.env.local`.
+- `npm run db:stop` mantém os dados. Para apagar tudo: `npx supabase stop --no-backup`.
+- Porta 54321 a 54324 ocupada costuma ser outra stack do Supabase na máquina: `npx supabase stop --all`.
+- O CLI avisa que os serviços locais escutam em todas as interfaces de rede e que o Studio não tem senha. Pare a stack em rede que não seja de confiança.
+- O CLI vem com telemetria de uso ligada. Para desligar: `npx supabase telemetry disable`.
+
+Usuários de teste criados pelo seed ficam documentados neste arquivo a partir da T-005.
+
+## A partir da T-006
+
+Este comando ainda não existe. O nome é fixado na task que o cria.
 
 | Comando | Faz | Task |
 | --- | --- | --- |
-| `npm run db:start` | Sobe o Supabase local em Docker | T-002 |
-| `npm run db:reset` | Recria o banco, aplica migrations e seed | T-002 |
-| `npm run db:types` | Regenera os tipos TypeScript do banco | T-002 |
-| `npm run db:test` | Roda os testes de banco | T-002 |
 | `npm run test:e2e` | Testes de ponta a ponta | T-006 |
-
-O Supabase local expõe o Studio (painel do banco) e uma caixa de entrada de e-mails de teste. Os endereços aparecem na saída de `supabase status`.
-
-Usuários de teste criados pelo seed ficam documentados neste arquivo a partir da T-005.
 
 ## Variáveis de ambiente
 
 - `.env.local` guarda os valores locais e nunca vai para o git.
 - `.env.example` lista os nomes das variáveis, sem valores.
 - Valores de produção existem só no Netlify e no GitHub (para o workflow de migrations).
-- Hoje a única variável é `NEXT_PUBLIC_SITE_URL`, opcional, com padrão `http://localhost:3000`. A validação fica em `src/lib/env.ts`: valor inválido derruba o `dev` e o `build` com uma mensagem que cita o nome da variável. No Netlify ninguém precisa cadastrar essa variável: o endereço público e a regra de indexação vêm do ambiente do build (`CONTEXT`, `URL` e `DEPLOY_PRIME_URL`), em `src/lib/site-url.ts`.
+- As variáveis são quatro. A validação fica em `src/lib/env.ts` e em `src/lib/supabase/admin.ts`, e a mensagem de erro cita só o nome da variável.
+
+| Variável | Uso |
+| --- | --- |
+| `NEXT_PUBLIC_SITE_URL` | Opcional, com padrão `http://localhost:3000`. Valor inválido derruba o `dev` e o `build` |
+| `NEXT_PUBLIC_SUPABASE_URL` | URL da API do Supabase |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Chave do navegador. Começa com `sb_publishable_` |
+| `SUPABASE_SECRET_KEY` | Chave de servidor, ignora RLS. Começa com `sb_secret_`. Nunca vai para o navegador |
+
+As três do Supabase são lidas no primeiro uso: o build passa sem elas.
+
+No Netlify ninguém precisa cadastrar `NEXT_PUBLIC_SITE_URL`: o endereço público e a regra de indexação vêm do ambiente do build (`CONTEXT`, `URL` e `DEPLOY_PRIME_URL`), em `src/lib/site-url.ts`.
+
+Para gerar os valores locais, com a stack de pé:
+
+```bash
+npx supabase status -o env --override-name api.url=NEXT_PUBLIC_SUPABASE_URL --override-name auth.publishable_key=NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY --override-name auth.secret_key=SUPABASE_SECRET_KEY
+```
+
+Copie para o `.env.local` só as três linhas com os nomes da tabela. A saída traz outras variáveis, que não devem ir para o arquivo.
 
 ## Notas
 

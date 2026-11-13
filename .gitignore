@@ -17,6 +17,9 @@ next-env.d.ts
 npm-debug.log*
 
 # Editores
+
+# Editores
+.vs/
 *.vsidx
 .idea/
 *.suo

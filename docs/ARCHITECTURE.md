@@ -95,6 +95,7 @@ src/
     dossier/
       sections/            registro de tipos de seção
     audit/
+    health/                diagnóstico de conexão, só em desenvolvimento
   mcp/                     definição das ferramentas MCP
   lib/
     supabase/              clients (browser, server, admin) e tipos gerados
@@ -131,6 +132,7 @@ mcp  ->  modules  ->  lib
 - `modules` nunca importa de `app` nem de `mcp`.
 - Um módulo só usa outro pelo `service.ts` dele, nunca pelo `repository.ts`.
 - `lib/supabase/admin.ts` (service role) só pode ser importado por `service.ts` e é marcado com `server-only`.
+- O `service.ts` escolhe e cria o client do Supabase (sessão da usuária ou admin) e passa para o `repository.ts`, que recebe o client como parâmetro e é o único que faz consultas.
 - `components/ui` e `styles` são folhas de apresentação: podem ser usados por `app` e pelos componentes dos módulos, e só importam de `lib`. `lib` não importa de nenhuma outra pasta de `src`.
 - A regra é imposta por lint (restrição de imports), não por convenção.
 
@@ -188,7 +190,7 @@ Defesa em profundidade, em três níveis:
 2. **Service** confere o papel antes de cada caso de uso (`requireAdmin`, `requireClient`).
 3. **Rotas** redirecionam por papel. Isso é experiência de uso, não segurança.
 
-A service role key ignora RLS. Uso permitido: operações administrativas do Auth (criar usuário, convidar). Qualquer outro uso exige justificativa no `architecture.md` da task.
+A service role key ignora RLS. No formato atual de chaves do Supabase ela é a secret key (`sb_secret_...`, variável `SUPABASE_SECRET_KEY`), e a chave do navegador é a publishable key (`sb_publishable_...`). Uso permitido: operações administrativas do Auth (criar usuário, convidar). Qualquer outro uso exige justificativa no `architecture.md` da task.
 
 Cadastro público fica desligado. Contas de cliente só nascem por convite da consultora.
 
