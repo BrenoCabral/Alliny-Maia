@@ -11,7 +11,6 @@ Fonte oficial do que fazer e em que ordem. O processo está em `agent-pipeline.m
 
 ### Fase 0. Fundação
 
-- [ ] **T-001** Scaffold do app Next.js e ferramentas. [definição](tasks/T-001-scaffold-next/definition.md) · [pasta](tasks/T-001-scaffold-next/)
 - [ ] **T-002** Supabase local e base de desenvolvimento. [definição](tasks/T-002-supabase-local/definition.md) · [pasta](tasks/T-002-supabase-local/)
 - [ ] **T-003** Landing no Next e deploy no Netlify. [definição](tasks/T-003-landing-no-next/definition.md) · [pasta](tasks/T-003-landing-no-next/)
 - [ ] **T-004** CI no GitHub Actions. [definição](tasks/T-004-ci-github-actions/definition.md) · [pasta](tasks/T-004-ci-github-actions/)
@@ -58,4 +57,4 @@ Fonte oficial do que fazer e em que ordem. O processo está em `agent-pipeline.m
 
 Mais recentes primeiro. Formato: `- [x] **T-XXX** Título. [definição](...) · [pasta](...) · concluída em AAAA-MM-DD`
 
-_Nenhuma ainda._
+- [x] **T-001** Scaffold do app Next.js e ferramentas. [definição](tasks/T-001-scaffold-next/definition.md) · [pasta](tasks/T-001-scaffold-next/) · concluída em 2026-11-13

@@ -1226,8 +1226,75 @@ Nenhuma bloqueia a execução. Cada uma foi resolvida no plano pelo caminho mais
 
 Preenchido pelo `dev-implementer` ao terminar.
 
+Executado em 2026-11-13, Windows 11, Git Bash, Node 26.3.0, npm 11.16.0, na branch `task/T-001-scaffold-next`.
+
 ### O que foi feito
+
+Os 13 passos, na ordem, com um commit por passo (mais um commit de correção do `package-lock.json`, ver desvio 1). O conteúdo dos arquivos é o do plano, sem alteração.
+
+Critérios de aceite do `definition.md`: os cinco atendidos.
+
+| # | Critério | Resultado |
+| --- | --- | --- |
+| 1 | `npm install` e `npm run dev` em máquina limpa | Atendido. Clone limpo da branch: `npm install` com saída 0, `npm run dev -- -p 3111` servindo `/` com o texto "em construção", `git status --short` vazio depois da instalação, do `check` e do `dev` |
+| 2 | `npm run check` passa | Atendido. `check exit 0` no repositório e no clone limpo: lint sem erros, "All matched files use Prettier code style!", typecheck, 2 arquivos e 9 testes passando, build com `/` e `/_not-found` estáticas |
+| 3 | Import de `src/app` em `src/modules` faz o lint falhar | Atendido. Teste `tests/lint/dependency-rule.test.ts` e prova manual abaixo |
+| 4 | `netlify.toml` publica só `legacy-site/` | Atendido no repositório. `git diff main -- netlify.toml` mostra só o bloco `[build.environment]` e o comentário, `git diff --stat main -- legacy-site` vazio. A conferência do Deploy Preview fica com o Breno (pendência 1) |
+| 5 | `docs/SETUP.md` reflete os comandos reais | Atendido. Scripts do `package.json`: `dev build start lint format typecheck test test:watch check`. Nenhum `db:*` nem `test:e2e` |
+
+Verificação final, item por item:
+
+1. `npm run check` na raiz: saída 0.
+2. Clone limpo: `npm install` saída 0, `npm run check` saída 0, `dev` servindo `/`, `git status --short` vazio.
+3. Prova manual da regra de dependência, com `src/modules/clients/tmp-violation.ts` (apagado em seguida):
+
+```
+src\modules\clients\tmp-violation.ts
+  1:8  error  Unexpected path "@/app/layout" imported in restricted zone. modules não importa de app nem de mcp. A dependência é app/mcp -> modules -> lib  import/no-restricted-paths
+
+✖ 1 problem (1 error, 0 warnings)
+
+exit 1
+```
+
+4. `NEXT_PUBLIC_SITE_URL=nao-e-url npm run build` no clone limpo: saída 1, com `Error: Variáveis de ambiente inválidas ou ausentes: NEXT_PUBLIC_SITE_URL. Confira o .env.local.` O valor `nao-e-url` não aparece na saída.
+5. `netlify.toml` e `legacy-site`: conforme o critério 4.
+6. `git diff --name-only main...HEAD` lista só arquivos da task. Os cinco hashes e as quatro linhas de rename do passo 13.1 batem com a linha de base. Os dois arquivos de `tasks/T-009-ficha-de-atendimento/` também têm o mesmo hash do início.
+7. `npm audit`: 9 avisos de severidade moderada, todos pela mesma origem (`minimatch`, GHSA-g3hv-75wg-m249, via `eslint` 10 e `typescript-eslint`). Só ferramentas de desenvolvimento. A correção oferecida é `npm audit fix --force`, que rebaixa o ESLint para a linha 9. Não foi rodada.
+
+Outras conferências:
+
+- `create-next-app@16.4.6`: `tsconfig.json`, `next.config.ts` e `AGENTS.md` vieram iguais ao esperado no passo 4.2. Depois do `next dev`, `AGENTS.md` e `tsconfig.json` não mudaram.
+- `npm install`: três avisos `ERESOLVE overriding peer dependency` (`eslint-plugin-import`, `eslint-plugin-jsx-a11y`, `eslint-plugin-react`), nenhum erro.
+- Versões instaladas iguais às da seção 2 do `architecture.md`. `tsc` 6.0.3, Next.js 16.4.6.
+- Página servida pelo `dev`: `<html lang="pt-BR" class="...playfair... ...montserrat... h-full antialiased">`, `<title>Alliny Maia</title>`, `robots` com `noindex, nofollow`.
+- As sete variáveis dos tokens aparecem no CSS do build.
+- O `.gitattributes` não fez nenhum arquivo alheio aparecer como modificado.
+- Não se aplicam: `npm run db:test` e `npm run test:e2e`.
 
 ### Desvios do plano
 
+1. **`package-lock.json` regravado (commit a mais).** O lock gerado pelo primeiro `npm install` (passo 4) não era estável: no clone limpo do passo 12.2, o `npm install` acrescentou `"peer": true` em quatro pacotes opcionais transitivos (da família `@emnapi`, `@napi-rs/wasm-runtime` e `@tybys/wasm-util`) e o `git status` do clone não ficou vazio. Nenhuma versão muda, só esse marcador. O lock do clone foi copiado para o repositório e commitado em `fix(scaffold): package-lock.json estável em instalação limpa (T-001)`. Conferido que essa forma é estável: `npm install` com e sem `node_modules` e `npm ci` deixam o arquivo com o mesmo hash. O passo 12.2 foi repetido do zero em um clone novo e passou com `git status` vazio. No repositório, o `npm install` seguinte removeu os cinco pacotes "extraneous" de `node_modules`.
+2. **`.vscode/extensions.json`.** O `npm run format` do passo 9 trocou o fim de linha do arquivo na cópia de trabalho (CRLF para LF). Não há diferença de conteúdo para o git, então o arquivo não entrou em commit: o `git add` só atualizou o índice.
+3. **Commit do `BACKLOG.md` por índice temporário.** Durante a execução apareceu no `BACKLOG.md` uma mudança alheia sem commit (linha nova da T-025). A regra "commit por caminho" levaria essa linha junto. O commit de conclusão foi montado com um índice temporário (`git read-tree`, `git update-index --cacheinfo`, `git commit-tree`, `git update-ref`) contendo só a mudança da T-001 no `BACKLOG.md`. A linha da T-025 continua na cópia de trabalho, sem commit. Nenhum `stash`, `reset`, `restore` ou `checkout` foi usado.
+4. **Mensagens de commit.** Todas terminam com a linha `Co-Authored-By` pedida na orquestração, que o plano não citava.
+
+Pontos que o planner resolveu pelo caminho conservador e que foram seguidos como estão no plano. Ficam como dúvidas a confirmar com o `architect` (seção "Dúvidas devolvidas ao architect"):
+
+- `@theme static` e `@theme inline static` em `src/styles/tokens.css`.
+- Teste do lint usando `@/modules/README.md`, com as zonas de `repository.ts` configuradas e sem teste automático.
+- `src/styles` entre as origens proibidas para `src/lib`.
+- Sem `.env.example` nesta task.
+
 ### Pendências
+
+Para o Breno:
+
+1. **Antes do merge:** abrir o Deploy Preview do pull request no Netlify e conferir que ele mostra o site atual (`legacy-site`) e que o log do deploy não rodou build do Next. Se o site não tiver Deploy Preview ligado, conferir o log do primeiro deploy de produção depois do merge. Nenhum agente executou isso.
+2. **Mudanças alheias na working tree**, todas sem commit e intactas: a renomeação em `.claude/agents/`, a linha de `agent-pipeline.md` e os arquivos de `tasks/T-009-ficha-de-atendimento/` (linha de base), mais as que apareceram durante a execução: `BACKLOG.md` (linha da T-025), `docs/PLANO.md`, `definition.md` das tasks T-012, T-013, T-014 e T-015, `tasks/T-012-modelo-do-dossie/mapeamento-coloracao.md` e a pasta `tasks/T-025-catalogo-de-produtos/`. Precisam de destino próprio.
+3. **`CLAUDE.md` e `README.md`:** a seção "Estado atual" dos dois diz que o app Next ainda não existe, e o `CLAUDE.md` diz que os comandos ficam disponíveis depois das tasks T-001 e T-002. Sugestão de task curta para o `pm`.
+4. **Opcional:** atualizar o Node local para a 26.13.1.
+5. **Pull request:** se o `gh` não estiver disponível, abrir pelo link `https://github.com/BrenoCabral/Alliny-Maia/compare/main...task/T-001-scaffold-next?expand=1`.
+6. **`npm audit`:** 9 avisos moderados em ferramentas de desenvolvimento (item 7 da verificação final). Somem quando `eslint` e `typescript-eslint` atualizarem o `minimatch`. Sugestão: reavaliar na T-004 (CI).
+
+Para o `architect`: as quatro dúvidas da seção "Dúvidas devolvidas ao architect".
