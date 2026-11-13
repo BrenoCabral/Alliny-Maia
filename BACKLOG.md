@@ -31,6 +31,7 @@ Fonte oficial do que fazer e em que ordem. O processo está em `agent-pipeline.m
 
 - [ ] **T-011** Arquivos e imagens das clientes. [definição](tasks/T-011-arquivos-e-imagens/definition.md) · [pasta](tasks/T-011-arquivos-e-imagens/)
 - [ ] **T-012** Modelo do dossiê e registro de seções. [definição](tasks/T-012-modelo-do-dossie/definition.md) · [pasta](tasks/T-012-modelo-do-dossie/)
+- [ ] **T-025** Catálogo de produtos. [definição](tasks/T-025-catalogo-de-produtos/definition.md) · [pasta](tasks/T-025-catalogo-de-produtos/)
 - [ ] **T-013** Design e renderização do dossiê. [definição](tasks/T-013-design-e-render-do-dossie/definition.md) · [pasta](tasks/T-013-design-e-render-do-dossie/)
 - [ ] **T-014** Editor do dossiê no painel. [definição](tasks/T-014-editor-do-dossie/definition.md) · [pasta](tasks/T-014-editor-do-dossie/)
 - [ ] **T-015** Área da cliente e Meu dossiê. [definição](tasks/T-015-area-da-cliente/definition.md) · [pasta](tasks/T-015-area-da-cliente/)
