@@ -966,3 +966,24 @@ Desvios da execução:
 9. Os trechos do `ci.yml` e do teste funcionaram como escritos no plano. Nenhum ajuste de sintaxe.
 
 ### Pendências
+
+Para o Breno:
+
+1. **Pull request e gatilho `pull_request`:** abrir pelo link `https://github.com/BrenoCabral/Alliny-Maia/compare/release/T-004-T-005...task/T-004-ci-github-actions?expand=1`, com o título e a descrição entregues, e conferir que `check` e `db` aparecem disparados pelo pull request e ficam verdes. O agente só viu os jobs rodarem por `push` em `ci/**`.
+2. **Checagem de tipos com migration de verdade:** só é confirmada no pull request da T-005 (job `db`, passo "Conferir tipos do banco" verde). Se acusar diferença só de formatação entre Windows e Linux, volta para o `architect`.
+3. **Proteção da `main`:** ativar depois do merge na `main`, quando o `CI` já tiver rodado nela, seguindo o `docs/SETUP.md`.
+4. **`CLAUDE.md`:** aplicar o texto da seção "Texto sugerido para o `CLAUDE.md`".
+5. **Conflitos com a T-005** em `docs/SETUP.md`, `docs/TESTES-MANUAIS.md` e `BACKLOG.md`: as duas tasks só acrescentam blocos. Na resolução, manter os dois lados.
+6. **Netlify:** se "Branch deploys" estiver em "All", cada branch `ci/**` e `release/**` gera um build no Netlify. O agente não tem como ver essa configuração. Nesta task subiram oito branches `ci/T-004-*`, já apagadas.
+7. **Produção:** nada a fazer. Nenhum segredo, variável ou migration.
+
+Observação para o `architect`, sem bloqueio: nas provas, o cache do npm gravado em uma branch `ci/**` não foi aproveitado pelas outras branches. Enquanto o `CI` não rodar na `main` e gravar o cache da branch padrão, é de esperar que a primeira execução de cada pull request instale sem cache (cerca de 40 s por job).
+
+### Fechamento
+
+- Execução final: `ci/T-004-final`, execução 43515001363, commit 888617b, `success`. Total 127 s, `check` 66 s, `db` 124 s, "Instalar dependências" 40 s e 47 s, "Subir o Supabase" 62 s. Todos os passos `success` e "Resumo da falha" `skipped`. Entre a prova 1 e esse commit só entrou mudança neste arquivo.
+- Depois do commit 888617b só entraram este registro e o `BACKLOG.md`.
+- `npm run check` com saída 0 nos passos 7, 11 e 13.
+- Limpeza: as oito branches `ci/T-004-*` foram apagadas do remoto e as sete locais do repositório. `git ls-remote --heads origin "ci/*"` sem saída. Nenhum arquivo `tmp-ci` ou `tmp_ci` no histórico da branch da task.
+- Nenhum pull request aberto para a branch no momento da entrega (conferido pela API). O disparo por `pull_request` fica na pendência 1.
+- Não se aplicam: `npm run db:test` local (a task não toca no schema e o banco local estava reservado para a T-005. O `db:test` rodou no job `db`) e `npm run test:e2e` (T-006).
