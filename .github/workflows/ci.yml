@@ -1,0 +1,117 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - "release/**"
+      - "ci/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' && !startsWith(github.ref, 'refs/heads/release/') }}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  check:
+    name: check
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Node
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci 2>&1 | tee "$RUNNER_TEMP/step.log"
+
+      - name: Lint
+        run: npm run lint 2>&1 | tee "$RUNNER_TEMP/step.log"
+
+      - name: Typecheck
+        run: npm run typecheck 2>&1 | tee "$RUNNER_TEMP/step.log"
+
+      - name: Testes unitários
+        run: npm run test 2>&1 | tee "$RUNNER_TEMP/step.log"
+
+      - name: Build
+        run: npm run build 2>&1 | tee "$RUNNER_TEMP/step.log"
+
+      - name: Resumo da falha
+        if: failure()
+        run: |
+          log="$RUNNER_TEMP/step.log"
+          if [ ! -s "$log" ]; then
+            echo "::error title=Resumo da falha (${GITHUB_JOB})::O passo que falhou não deixou saída registrada."
+            exit 0
+          fi
+          summary="$(tail -n 30 "$log" | sed -e 's/\x1b\[[0-9;?]*[A-Za-z]//g' -e 's/\r//g' -e 's/%/%25/g' | awk 'BEGIN { ORS = "%0A" } { print }')"
+          echo "::error title=Resumo da falha (${GITHUB_JOB})::${summary}"
+
+  db:
+    name: db
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Node
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci 2>&1 | tee "$RUNNER_TEMP/step.log"
+
+      - name: Subir o Supabase
+        run: npm run db:start -- --exclude studio,imgproxy,mailpit,edge-runtime,realtime 2>&1 | tee "$RUNNER_TEMP/step.log"
+
+      - name: Testes de banco
+        run: npm run db:test 2>&1 | tee "$RUNNER_TEMP/step.log"
+
+      - name: Regenerar tipos do banco
+        run: npm run db:types 2>&1 | tee "$RUNNER_TEMP/step.log"
+
+      - name: Conferir tipos do banco
+        run: |
+          file="src/lib/supabase/database.types.ts"
+          log="$RUNNER_TEMP/step.log"
+          if ! grep -q "export type Database" "$file"; then
+            echo "A geração não produziu tipos em $file." | tee "$log"
+            echo "::error file=$file::A geração não produziu tipos. É falha da geração, não diferença de tipos."
+            exit 1
+          fi
+          if ! git diff --exit-code -- "$file" 2>&1 | tee "$log"; then
+            echo "::error file=$file::Tipos do banco desatualizados. Rode npm run db:reset e npm run db:types e faça commit de $file."
+            exit 1
+          fi
+          echo "Tipos do banco em dia." | tee "$log"
+
+      - name: Resumo da falha
+        if: failure()
+        run: |
+          log="$RUNNER_TEMP/step.log"
+          if [ ! -s "$log" ]; then
+            echo "::error title=Resumo da falha (${GITHUB_JOB})::O passo que falhou não deixou saída registrada."
+            exit 0
+          fi
+          summary="$(tail -n 30 "$log" | sed -e 's/\x1b\[[0-9;?]*[A-Za-z]//g' -e 's/\r//g' -e 's/%/%25/g' | awk 'BEGIN { ORS = "%0A" } { print }')"
+          echo "::error title=Resumo da falha (${GITHUB_JOB})::${summary}"
