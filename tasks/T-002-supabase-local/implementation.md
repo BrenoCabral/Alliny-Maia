@@ -1327,11 +1327,11 @@ O `dev-implementer` não edita o `CLAUDE.md`. O Breno aplica, se concordar. São
 
 | # | Critério do `definition.md` | Passo | Prova | Resultado |
 | --- | --- | --- | --- | --- |
-| 1 | Com o Docker ligado, `npm run db:start` sobe o Supabase e `npm run dev` conecta | 3, 4, 9, 11, 12, 13, 15 | Passo 15.1 (`start exit 0` a partir da stack parada) e 15.2 (`/api/dev/health` responde 200 com `ok: true` pelo `npm run dev`). Teste `src/modules/health/service.test.ts` | |
-| 2 | `npm run db:reset` recria o banco do zero sem erro | 4, 15 | Passo 15.1: `reset exit 0`, sem aviso de seed ausente | |
-| 3 | `npm run db:types` gera o arquivo de tipos e o typecheck passa | 6, 15 | Passo 6 (mesmo hash em duas gerações) e 15.1 (`types exit 0`, `git status` vazio, `check exit 0`) | |
-| 4 | `npm run db:test` executa e passa | 5, 15 | `supabase/tests/000_infra.test.sql` com 5 asserções, `db:test exit 0` no passo 15.1. Prova negativa do passo 5 (`exit 1` com tabela sem RLS) | |
-| 5 | Nenhum segredo está versionado | 12, 15 | Passo 15.5: `git ls-files` só com `.env.example`, `git grep` só com prefixos e valores inventados, conferência dos valores do `.env.local` com duas linhas `ok:` | |
+| 1 | Com o Docker ligado, `npm run db:start` sobe o Supabase e `npm run dev` conecta | 3, 4, 9, 11, 12, 13, 15 | Passo 15.1 (`start exit 0` a partir da stack parada) e 15.2 (`/api/dev/health` responde 200 com `ok: true` pelo `npm run dev`). Teste `src/modules/health/service.test.ts` | Atendido. `start exit 0` a partir da stack parada e `/api/dev/health` 200 com `ok: true` pelo `npm run dev -- -p 3002` |
+| 2 | `npm run db:reset` recria o banco do zero sem erro | 4, 15 | Passo 15.1: `reset exit 0`, sem aviso de seed ausente | Atendido. `reset exit 0`, sem aviso de seed ausente |
+| 3 | `npm run db:types` gera o arquivo de tipos e o typecheck passa | 6, 15 | Passo 6 (mesmo hash em duas gerações) e 15.1 (`types exit 0`, `git status` vazio, `check exit 0`) | Atendido. `types exit 0` duas vezes, `git status` vazio, `check exit 0` |
+| 4 | `npm run db:test` executa e passa | 5, 15 | `supabase/tests/000_infra.test.sql` com 5 asserções, `db:test exit 0` no passo 15.1. Prova negativa do passo 5 (`exit 1` com tabela sem RLS) | Atendido. 5 asserções, `Result: PASS`, `exit 0`. Prova negativa com `exit 1` |
+| 5 | Nenhum segredo está versionado | 12, 15 | Passo 15.5: `git ls-files` só com `.env.example`, `git grep` só com prefixos e valores inventados, conferência dos valores do `.env.local` com duas linhas `ok:` | Atendido. Só `.env.example` versionado, `git grep` só com prefixos e valores inventados, duas linhas `ok:` |
 
 Itens do escopo e notas sem critério próprio:
 
@@ -1392,6 +1392,45 @@ Preenchido pelo `dev-implementer` ao terminar. Não registre valores de chave.
 
 ### O que foi feito
 
+Execução em 2026-11-13, no worktree da task, com Node 26.3.0, npm 11.16.0 e Docker 29.5.2. Os 16 passos foram executados na ordem, com um commit por passo. Nenhum valor de chave foi registrado.
+
+- Passo 3: `supabase` 3.1.0 (dev), `@supabase/supabase-js` 2.119.0 e `@supabase/ssr` 0.12.7, versões exatas. Cinco scripts `db:*`. `package-lock.json` com o mesmo hash em instalações seguidas.
+- Passo 4: `supabase/config.toml` com os cinco ajustes, `seed.sql` e `migrations/.gitkeep`. Dez containers, todos com sufixo `alliny-maia`, nenhum de analytics. `start exit 0` e `reset exit 0`.
+- Passo 5: `supabase/tests/000_infra.test.sql`. `db:test`: `Files=1, Tests=5, Result: PASS`, exit 0. Prova negativa com arquivo temporário (tabela sem RLS): `Failed test 1: "toda tabela de public tem RLS ligada"`, `Result: FAIL`, exit 1. Sem o temporário: PASS, exit 0.
+- Passo 6: `database.types.ts` gerado, mesmo sha256 em duas gerações, lint e typecheck verdes.
+- Passo 7: `supabasePublicEnvSchema` e `getSupabasePublicEnv`. `env.test.ts` com 3 casos antigos e 5 novos.
+- Passo 8: alias de `server-only`. Prova: antes do alias o teste temporário falha por não resolver `server-only` (exit 1). Depois do alias passa (1 teste, exit 0).
+- Passo 9: `browser.ts`, `server.ts` e `admin.ts`, sem ajuste de tipo. Build sem `.env.local` com exit 0.
+- Passo 10: zona de lint do client admin com os alvos do `architecture.md`, sem alteração. Os 8 caminhos bloqueados acusam e `service.ts` passa.
+- Passo 11: módulo `health` (repository, service, 5 testes). Total do projeto: 3 arquivos de teste, 21 testes.
+- Passo 12: `.env.example` versionado. `.env.local` gerado com os três nomes, ignorado pelo git.
+- Passo 13: rota `GET /api/dev/health`. Com `npx next dev -p 3002`: 200 e `{"ok":true,"checks":{"env":"ok","database":"ok"},...}`. Com `SUPABASE_SECRET_KEY` inventada sem o prefixo: 503, `env: "fail"`, mensagem cita `SUPABASE_SECRET_KEY` e não contém o valor.
+- Passo 14: `docs/SETUP.md`, só os três trechos previstos.
+- Passo 15, a partir da stack parada:
+  - 15.1: `stop`, `start`, `reset`, `types` (duas vezes, `git status` vazio) e `db:test` com exit 0. `npm run check` com exit 0 (lint, typecheck, 21 testes, build).
+  - 15.2: `npm run dev -- -p 3002`: 200 com `ok: true`. Depois de `db:stop`: 503, `env: "ok"`, `database: "fail"`, mensagem fixa sem URL nem chave. Depois de `db:start`: 200 de novo.
+  - 15.3: `npm run build` com exit 0 e `npx next start -p 3002`: `/api/dev/health` 404 e `/` 200. O build lista a rota como estática (o 404 é fixado no build).
+  - 15.4: clone limpo sem `.env.local`: `npm install` com exit 0 e `git status` vazio (lock estável). `npm run check`: a primeira execução falhou e a segunda passou. Ver "Desvios do plano", item 4.
+  - 15.5: `git ls-files` só com `.env.example`. `git grep` só com prefixos e valores inventados. Conferência dos valores do `.env.local`: duas linhas `ok:`, nenhuma `VAZOU:`.
+  - 15.6: `db:stop` com exit 0, nenhum container do Supabase, nada na porta 3002, `git status` vazio.
+
 ### Desvios do plano
 
+1. **`supabase init` criou `supabase/.gitignore`.** O `architecture.md` (seção 3) dizia que o `init` 3.1.0 não cria esse arquivo, e o passo 4 mandava parar. A execução parou e relatou. O orquestrador do pipeline decidiu apagar o arquivo (decisão dele, não aprovação do Breno, reversível no pull request). Antes de apagar, `git check-ignore -v` confirmou que `supabase/.temp`, `supabase/.branches/`, `supabase/.env.keys` e `supabase/.env.local` continuam ignorados pelo `.gitignore` da raiz. A frase da seção 3 do `architecture.md` foi corrigida.
+2. **`npm run check` do passo 3 fora de ordem.** Rodou depois da instalação dos pacotes e antes da inclusão dos scripts `db:*` (a primeira edição do `package.json` falhou). Com os scripts, só o lint foi repetido naquele passo. O `check` completo com o `package.json` final rodou no passo 15.1, com exit 0.
+3. **Formatação em `src/lib/env.ts`.** O Prettier quebrou em três linhas a expressão `z.string().startsWith("sb_publishable_")` do plano. Só formatação, sem mudança de contrato.
+4. **Timeout no primeiro `check` do clone limpo (15.4).** Na primeira execução, o teste `tests/lint/dependency-rule.test.ts > acusa import de app dentro de modules` (da T-001, primeiro do arquivo, o que paga a inicialização do ESLint) estourou o limite de 5000 ms, e o `check` saiu com 1. Os outros 20 testes passaram. Repetido no mesmo clone: `npm run test` duas vezes com 21 de 21 (esse teste em cerca de 1,2 s) e `npm run check` completo com exit 0, `git status` vazio. É partida a frio com `node_modules` recém-instalado, não erro de lógica. Nenhum teste foi alterado. Fica como pendência, porque o CI da T-004 sempre roda a frio.
+5. **Aviso informativo no `db:reset`:** `Skipping migration .gitkeep... (file name must match pattern "<timestamp>_name.sql")`. Não é erro e some quando a primeira migration substituir o `.gitkeep`.
+6. **Arquivos temporários** ficaram no scratchpad da sessão, fora do repositório. O clone limpo foi apagado ao fim do 15.4.
+
 ### Pendências
+
+1. **`CLAUDE.md`:** aplicar o texto da seção "Texto sugerido para o `CLAUDE.md`". Nenhum agente editou o arquivo.
+2. **Ordem de merge:** a branch nasceu de `task/T-001-scaffold-next`, que ainda não está na `main`. Mesclar a T-001 antes. Até lá, o pull request da T-002 mostra também os commits da T-001.
+3. **Conflitos com a T-003:** as duas tasks mexem em `package.json`, `package-lock.json`, `docs/SETUP.md`, `docs/ARCHITECTURE.md` e `BACKLOG.md`. No `package-lock.json`, a resolução é aceitar um dos lados e rodar `npm install` de novo, nunca editar à mão.
+4. **Pull request:** o `gh` não existe nesta máquina. Abrir pelo link: `https://github.com/BrenoCabral/Alliny-Maia/compare/main...task/T-002-supabase-local?expand=1`
+5. **Na máquina do Breno, em cada worktree:** Docker Desktop aberto, `npm install` e criar o `.env.local` conforme o `.env.example`.
+6. **Produção:** nada a fazer agora. As três variáveis do Supabase são cadastradas no Netlify na T-008, com os mesmos nomes. O projeto de produção deve nascer em Postgres 17.
+7. **Opcional:** desligar a telemetria do CLI (`npx supabase telemetry disable`).
+8. **Decisão a confirmar:** o `supabase/.gitignore` gerado pelo `init` foi apagado por decisão do orquestrador (desvio 1). Se preferir versionar o arquivo, é só recriar no pull request.
+9. **Sugestão de task para o `pm`:** o primeiro teste de `tests/lint/dependency-rule.test.ts` pode estourar o limite de 5 s em partida a frio (desvio 4). Vale tratar antes ou junto da T-004 (CI), por exemplo com um limite maior só para a inicialização do ESLint.

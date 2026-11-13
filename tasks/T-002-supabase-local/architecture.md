@@ -74,7 +74,7 @@ Imagens que o CLI 3.1.0 sobe, para referência da T-008: Postgres 17.11 (`major_
 | `CLAUDE.md` | Só as frases de "Comandos" e "Estado atual" que dizem que os `db:*` e o Supabase local chegam na T-002 |
 | `src/lib/supabase/.gitkeep` | Removido, se existir |
 
-Não precisam mudar: `.gitignore` (já cobre `.env`, `.env.*`, `supabase/.branches/` e `supabase/.temp/`, e o `init` 3.1.0 não cria `supabase/.gitignore`), `.prettierignore` (o Prettier ignora `.toml`, `.sql` e `.env.example`), `next.config.ts`, `netlify.toml`, `tsconfig.json`.
+Não precisam mudar: `.gitignore` (já cobre `.env`, `.env.*`, `supabase/.branches/` e `supabase/.temp/`, e o `supabase/.gitignore` é redundante: na execução da task o `init` 3.1.0 criou esse arquivo, ao contrário do que a sondagem indicava, e ele foi removido porque tudo o que ignora já está coberto pelo `.gitignore` da raiz), `.prettierignore` (o Prettier ignora `.toml`, `.sql` e `.env.example`), `next.config.ts`, `netlify.toml`, `tsconfig.json`.
 
 ### Convivência com a T-003
 
