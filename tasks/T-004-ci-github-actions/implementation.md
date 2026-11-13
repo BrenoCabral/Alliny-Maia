@@ -846,11 +846,11 @@ Nenhum agente edita o `CLAUDE.md`. O Breno aplica, se concordar. É o texto da s
 
 | # | Critério do `definition.md` | Passo | Prova | Resultado |
 | --- | --- | --- | --- | --- |
-| 1 | Um pull request com erro de lint, de tipo, de teste ou de RLS fica vermelho | 4, 10 | Provas 2, 3, 4 e 5: `check` vermelho em "Lint", em "Typecheck" e em "Testes unitários", e `db` vermelho em "Testes de banco" (`supabase/tests/000_infra.test.sql` contra a migration temporária). Execuções por `push` em `ci/**`, com os mesmos jobs do pull request | |
-| 2 | Um pull request que altera migration sem regenerar os tipos fica vermelho | 4, 10 | Prova 6: `db` vermelho em "Conferir tipos do banco" com a anotação "Tipos do banco desatualizados". Prova 7: falha de geração reprova em "Regenerar tipos do banco" e não é lida como diferença | |
-| 3 | O tempo total do workflow é razoável para uso diário | 8, 9 | Tempo total e por job, sem cache (passo 8) e com cache do npm (passo 9), dentro do orçamento da seção 7.4 do `architecture.md` | |
-| 4 | Um pull request sem erro fica verde, inclusive na primeira execução, sem cache | 3, 8, 11 | Prova 1 (`ci/T-004-verde`, primeira execução do repositório) e execução final (`ci/T-004-final`), com `check` e `db` verdes. Teste `tests/lint/dependency-rule.test.ts` passando na primeira execução do clone limpo (passo 3) e a frio em todas as execuções | |
-| 5 | `docs/SETUP.md` explica como ativar a proteção da `main` e quais verificações marcar como obrigatórias | 5 | Seção "CI (GitHub Actions)", subseção "Proteção da `main`", com `check` e `db` | |
+| 1 | Um pull request com erro de lint, de tipo, de teste ou de RLS fica vermelho | 4, 10 | Provas 2, 3, 4 e 5: `check` vermelho em "Lint", em "Typecheck" e em "Testes unitários", e `db` vermelho em "Testes de banco" (`supabase/tests/000_infra.test.sql` contra a migration temporária). Execuções por `push` em `ci/**`, com os mesmos jobs do pull request | Atendido. Execuções 43514151536 (Lint), 43514151869 (Typecheck), 43514151829 (Testes unitários) e 43514151336 (Testes de banco), todas `failure` no passo esperado |
+| 2 | Um pull request que altera migration sem regenerar os tipos fica vermelho | 4, 10 | Prova 6: `db` vermelho em "Conferir tipos do banco" com a anotação "Tipos do banco desatualizados". Prova 7: falha de geração reprova em "Regenerar tipos do banco" e não é lida como diferença | Atendido. Execução 43514151163 vermelha em "Conferir tipos do banco" com a anotação de tipos desatualizados. Execução 43514151597 vermelha em "Regenerar tipos do banco", com "Conferir" `skipped` |
+| 3 | O tempo total do workflow é razoável para uso diário | 8, 9 | Tempo total e por job, sem cache (passo 8) e com cache do npm (passo 9), dentro do orçamento da seção 7.4 do `architecture.md` | Atendido. 97 s sem cache e 70 s com cache do npm, dentro do orçamento de 10 minutos |
+| 4 | Um pull request sem erro fica verde, inclusive na primeira execução, sem cache | 3, 8, 11 | Prova 1 (`ci/T-004-verde`, primeira execução do repositório) e execução final (`ci/T-004-final`), com `check` e `db` verdes. Teste `tests/lint/dependency-rule.test.ts` passando na primeira execução do clone limpo (passo 3) e a frio em todas as execuções | Atendido. Execuções 43513180346 (primeira do repositório, sem cache) e a final em `ci/T-004-final` (ver Registro) verdes. Clone limpo: 66 de 66 na primeira execução |
+| 5 | `docs/SETUP.md` explica como ativar a proteção da `main` e quais verificações marcar como obrigatórias | 5 | Seção "CI (GitHub Actions)", subseção "Proteção da `main`", com `check` e `db` | Atendido. `docs/SETUP.md`, seção "CI (GitHub Actions)", subseção "Proteção da `main`" |
 
 Itens do escopo e notas sem critério próprio:
 
@@ -911,6 +911,58 @@ Preenchido pelo `dev-implementer` ao terminar. Não registre valores de chave.
 
 ### O que foi feito
 
+Executado em 2026-11-13, no worktree da task, sem nenhum comando `db:*`, `supabase` ou `docker` na máquina.
+
+- Passos 1 e 2: branch e linha de base conferidas, documentos da task commitados.
+- Passo 3: aquecimento do ESLint em `beforeAll` com limite de 60 s em `tests/lint/dependency-rule.test.ts`. Assinatura `beforeAll(fn, timeout?)` conferida nos tipos do Vitest 5.1.0 instalado. 66 testes antes e depois. Clone limpo em pasta temporária: `npm ci` e `npm run test` na primeira execução com saída 0, 66 de 66, duração total de 4,05 s. A pasta foi apagada.
+- Passo 4: `.github/workflows/ci.yml` criado com o conteúdo do plano. Prettier, lint e conferências estáticas passaram (sem `secrets.`, sem `pull_request_target`, só `actions/checkout@v7` e `actions/setup-node@v7`, 9 e 3 ocorrências de `tee`).
+- Passos 5 e 6: seção "CI (GitHub Actions)" e aviso no `docs/SETUP.md`, frase da seção 12 de `docs/ARCHITECTURE.md`, seção da task em `docs/TESTES-MANUAIS.md`. Nenhuma linha existente removida nos arquivos compartilhados.
+- Passo 7: `npm run check` com saída 0.
+- Passos 8 a 10: provas no GitHub por branches `ci/T-004-*`, observadas pela API pública sem autenticação.
+- Passo 11: execução final em `ci/T-004-final`.
+- Passo 12: branches `ci/T-004-*` apagadas do remoto e do repositório local.
+
+Prova 1, execuções verdes de `ci/T-004-verde`:
+
+| Execução | Commit | Total | `check` | `db` | "Instalar dependências" | "Subir o Supabase" |
+| --- | --- | --- | --- | --- | --- | --- |
+| 43513180346, sem cache (primeira do repositório) | 35933c5 | 97 s | 69 s | 95 s | 40 s nos dois jobs | 38 s |
+| 43514015881, com cache do npm | c5ece5d (commit vazio) | 70 s | 36 s | 67 s | 7 s nos dois jobs | 42 s |
+
+Nas duas, todos os passos `success` e "Resumo da falha" `skipped`. Demais passos da execução sem cache: Lint 2 s, Typecheck 3 s, Testes unitários 1 s, Build 7 s, Testes de banco 2 s, Regenerar tipos 1 s, Conferir tipos menos de 1 s. O passo "Conferir tipos do banco" verde confirma que os tipos gerados no Linux com o schema vazio são iguais aos versionados. Nenhuma contingência da seção 6.4 do `architecture.md` foi necessária: a lista de `--exclude` funcionou como está.
+
+Provas 2 a 7, todas `completed` com `failure`, enviadas juntas depois da prova 1:
+
+| # | Branch e commit | Execução | Job e passo que falhou | Outro job | Anotação |
+| --- | --- | --- | --- | --- | --- |
+| 2 | `ci/T-004-prova-lint` 9effcc4 | 43514151536 | `check`, "Lint" (os seguintes `skipped`) | `db` verde | `Unexpected path "@/app/layout" imported in restricted zone. modules não importa de app nem de mcp` (`import/no-restricted-paths`) |
+| 3 | `ci/T-004-prova-tipo` 7c53563 | 43514151869 | `check`, "Typecheck", com "Lint" verde | `db` verde | `src/lib/tmp-ci-type.ts(1,14): error TS2322: Type 'string' is not assignable to type 'number'` |
+| 4 | `ci/T-004-prova-teste` 696253a | 43514151829 | `check`, "Testes unitários", com "Lint" e "Typecheck" verdes | `db` verde | Anotação do teste plantado (`AssertionError: expected 1 to be 2`). `Tests 1 failed, 66 passed (67)` |
+| 5 | `ci/T-004-prova-rls` ec3ff7b | 43514151336 | `db`, "Testes de banco", com "Subir o Supabase" verde | `check` verde | `Failed test 5: "toda tabela de public tem RLS ligada"`, registro inesperado `tmp_ci_no_rls` |
+| 6 | `ci/T-004-prova-tipos` f6d8eda | 43514151163 | `db`, "Conferir tipos do banco", com "Testes de banco" e "Regenerar tipos do banco" verdes | `check` verde | `Tipos do banco desatualizados. Rode npm run db:reset e npm run db:types e faça commit de src/lib/supabase/database.types.ts.` O resumo traz o diff com a tabela `tmp_ci_types` |
+| 7 | `ci/T-004-prova-geracao` cddd386 | 43514151597 | `db`, "Regenerar tipos do banco", com "Conferir tipos do banco" `skipped` | `check` verde | `supabase start is not running.` |
+
+A prova 5 confirma também que o `supabase start` aplica as migrations (a tabela temporária foi vista pelo teste), então a contingência 3 não se aplica. A anotação "Resumo da falha" chegou inteira nas seis, sem corte. Conferências locais antes do push: prova 2 com lint 1 e typecheck 0, prova 3 com lint 0 e typecheck 2, prova 4 com lint 0, typecheck 0 e só o teste plantado falhando.
+
+Nas provas, "Instalar dependências" levou de 37 a 60 s e "Subir o Supabase" de 57 a 74 s: o cache do npm gravado em uma branch `ci/**` não é restaurado por outra branch, e sete execuções rodaram ao mesmo tempo. O job mais lento levou 142 s.
+
+Execução final e limpeza: ver "Fechamento", no fim deste registro.
+
 ### Desvios do plano
+
+Os cinco desvios do plano em relação ao `architecture.md`, copiados da seção "Desvios deste plano":
+
+1. Destino do pull request é `release/T-004-T-005`, não `main`.
+2. Gatilho `push` também em `release/**`, sem cancelamento de execução nessas branches.
+3. A `ci/T-004-verde` foi enviada primeiro e sozinha. As vermelhas só depois dela verde.
+4. O gatilho `pull_request` não foi observado pelo agente. Fica como pendência 1.
+5. Execução final em `ci/T-004-final`.
+
+Desvios da execução:
+
+6. Os commits das branches de prova também levaram o rodapé `Co-Authored-By`. O plano só pedia o rodapé nos commits da branch da task. As branches foram apagadas.
+7. As seis branches de prova foram preparadas e enviadas enquanto a segunda execução da `ci/T-004-verde` ainda rodava, e não depois dela terminar. São branches diferentes, então nenhuma execução foi cancelada.
+8. No clone limpo do passo 3 foi anotado o tempo total do Vitest (4,05 s para os 6 arquivos), e não o tempo isolado de `dependency-rule.test.ts`. Como o total fica abaixo do limite de 5 s por teste, nenhum limite por teste foi preciso.
+9. Os trechos do `ci.yml` e do teste funcionaram como escritos no plano. Nenhum ajuste de sintaxe.
 
 ### Pendências
