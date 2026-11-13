@@ -1927,14 +1927,14 @@ docker ps --format '{{.Names}}' | grep -i supabase         # nada: a stack ficou
 
 | # | Critério do `definition.md` | Passo | Prova | Resultado |
 | --- | --- | --- | --- | --- |
-| 1 | Uma cliente lê e edita só o próprio perfil e não consegue mudar o próprio papel | 5, 6, 7, 9 | `010_profiles.test.sql`: "a cliente lê exatamente uma linha, a própria", "a cliente 1 não lê o perfil da cliente 2", "a cliente atualiza o próprio nome", "o nome da cliente 2 continua igual depois do update da cliente 1", "a cliente não troca o próprio papel", "authenticated só escreve na coluna full_name". Passo 9, itens 2 a 5 | |
-| 2 | Uma admin lê todos os perfis | 5, 6, 7, 9 | `010_profiles.test.sql`: "a admin lê todos os perfis (mesma contagem vista como postgres)", "private.is_admin() devolve true para a admin". Passo 9, item 6 | |
-| 3 | Um usuário anônimo não lê nenhum perfil | 5, 6, 7, 9 | `010_profiles.test.sql`: "anon não lê profiles: permissão negada", "anon não tem privilégio em profiles". Passo 9, item 7 | |
-| 4 | Os testes de banco cobrem os três casos e passam | 5, 7, 15 | `npm run db:test` com saída 0 nos passos 7 e 15.1 (`000_infra` e `010_profiles`) | |
-| 5 | Um usuário criado no Auth passa a ter perfil com papel `client`, sem ação manual | 6, 7, 9 | `010_profiles.test.sql`: "usuário criado com role admin nos metadados nasce client", "usuário criado sem metadados nasce client e com nome vazio". Passo 9, itens 8 e 9 (criação pela API de admin do Auth) | |
-| 6 | Depois de `npm run db:reset` existem a admin e as duas clientes de teste, com perfil e papel corretos, e `docs/SETUP.md` lista as credenciais | 7, 9, 13, 15 | `010_profiles.test.sql`: "seed: as três contas existem com os papéis certos". Passo 9, item 1 (login real das três). Subseção "Usuários de teste" do `docs/SETUP.md` | |
-| 7 | `requireAdmin` recusa quem não é admin, `requireClient` recusa quem não é cliente e os dois recusam quem não tem sessão | 10, 11, 12 | `src/modules/auth/service.test.ts`: blocos "sem sessão", "sessão válida sem linha em profiles", "sessão de admin" e "sessão de cliente". `src/modules/auth/repository.test.ts` | |
-| 8 | `docs/ARCHITECTURE.md` continua coerente com o que foi implementado | 2, 15 | Diff do `architect` commitado no passo 2 e conferência do passo 15.2 | |
+| 1 | Uma cliente lê e edita só o próprio perfil e não consegue mudar o próprio papel | 5, 6, 7, 9 | `010_profiles.test.sql`: "a cliente lê exatamente uma linha, a própria", "a cliente 1 não lê o perfil da cliente 2", "a cliente atualiza o próprio nome", "o nome da cliente 2 continua igual depois do update da cliente 1", "a cliente não troca o próprio papel", "authenticated só escreve na coluna full_name". Passo 9, itens 2 a 5 | Atendido |
+| 2 | Uma admin lê todos os perfis | 5, 6, 7, 9 | `010_profiles.test.sql`: "a admin lê todos os perfis (mesma contagem vista como postgres)", "private.is_admin() devolve true para a admin". Passo 9, item 6 | Atendido |
+| 3 | Um usuário anônimo não lê nenhum perfil | 5, 6, 7, 9 | `010_profiles.test.sql`: "anon não lê profiles: permissão negada", "anon não tem privilégio em profiles". Passo 9, item 7 | Atendido |
+| 4 | Os testes de banco cobrem os três casos e passam | 5, 7, 15 | `npm run db:test` com saída 0 nos passos 7 e 15.1 (`000_infra` e `010_profiles`) | Atendido |
+| 5 | Um usuário criado no Auth passa a ter perfil com papel `client`, sem ação manual | 6, 7, 9 | `010_profiles.test.sql`: "usuário criado com role admin nos metadados nasce client", "usuário criado sem metadados nasce client e com nome vazio". Passo 9, itens 8 e 9 (criação pela API de admin do Auth) | Atendido |
+| 6 | Depois de `npm run db:reset` existem a admin e as duas clientes de teste, com perfil e papel corretos, e `docs/SETUP.md` lista as credenciais | 7, 9, 13, 15 | `010_profiles.test.sql`: "seed: as três contas existem com os papéis certos". Passo 9, item 1 (login real das três). Subseção "Usuários de teste" do `docs/SETUP.md` | Atendido |
+| 7 | `requireAdmin` recusa quem não é admin, `requireClient` recusa quem não é cliente e os dois recusam quem não tem sessão | 10, 11, 12 | `src/modules/auth/service.test.ts`: blocos "sem sessão", "sessão válida sem linha em profiles", "sessão de admin" e "sessão de cliente". `src/modules/auth/repository.test.ts` | Atendido |
+| 8 | `docs/ARCHITECTURE.md` continua coerente com o que foi implementado | 2, 15 | Diff do `architect` commitado no passo 2 e conferência do passo 15.2 | Atendido |
 
 Itens do escopo e pontos do `architect` sem critério próprio:
 
@@ -2002,6 +2002,54 @@ Preenchido pelo `dev-implementer` ao terminar. Não registre valores de chave ne
 
 ### O que foi feito
 
+Executado em 2026-11-13, na worktree da task, com o banco local reservado para a T-005.
+
+- **Passos 1 a 3.** Branch e ambiente conferidos (Node 26.3.0, npm 11.16.0, CLI 3.1.0, Docker 29.5.2). Documentos da task commitados. Stack de pé, `.env.local` criado com os três nomes e fora do git. Linha de base: `db:reset` 0, `db:test` 0 (`000_infra`, 5 asserções), `check` 0 (66 testes do Vitest, a `main` já tinha mais que os 21 citados no plano).
+- **Passo 4.** `auto_expose_new_tables = false` ficou no `config.toml`. Detalhe em "Desvios do plano".
+- **Passo 5 (vermelho).** `010_profiles.test.sql` falhou antes da migration: `ERROR: relation "public.profiles" does not exist`, "You planned 49 tests but ran 0", saída 1.
+- **Passo 6.** Migration `20261113214406_profiles_and_roles.sql` aplicada com `db:reset` 0. `000_infra` passou. No `010`, as asserções 2 a 24 passaram e só as que dependem do seed falharam (1, 26, 30, 33, 36 a 38, 40, 44 e 45), como previsto.
+- **Passo 7 (verde).** Seed plano A sem ajuste de coluna. `db:reset` 0 e `db:test` 0 duas vezes seguidas: `Files=2, Tests=54, Result: PASS` (5 do `000_infra` e 49 do `010_profiles`). A tentativa opcional de personificar o papel do Auth no pgTAP foi negada (`permission denied to set role "supabase_auth_admin"`). O arquivo temporário foi apagado e a prova ficou com o item 8 do passo 9.
+- **Passo 8.** `db:types` duas vezes com o mesmo hash. O arquivo tem `profiles` e `app_role`, nenhuma função, nada de `private`, nenhuma chave nem URL.
+- **Passo 9.** Script fora do repositório, com o banco no estado de `db:reset`, saída 0:
+
+  | Item | Resultado |
+  | --- | --- |
+  | 1 | Login das três contas do seed: ok |
+  | 2 | Cliente 1 lê `profiles`: HTTP 200, uma linha, a dela, `client` |
+  | 3 | Cliente 1 tenta trocar o próprio papel: HTTP 403, `42501` |
+  | 4 | Cliente 1 edita o próprio nome: HTTP 200, nome novo, `updated_at` maior que o do item 2 |
+  | 5 | Cliente 1 tenta editar o nome da cliente 2: HTTP 200 e `[]` |
+  | 6 | Admin lê `profiles`: HTTP 200, três linhas (uma `admin`, duas `client`), cliente 2 com o nome original |
+  | 7 | Sem token de usuária: HTTP 401, `42501` |
+  | 8 | Usuário criado pela API de admin do Auth com `role: admin` nos dois metadados: perfil `client`, nome "Criada pela API" |
+  | 9 | A conta nova entra e lê uma linha, `client` |
+
+  Depois: `db:reset` 0 e `db:test` 0.
+- **Passos 10 a 12.** Módulo `auth`. Vermelho anotado: `repository.test.ts` falhou com `Cannot find module './repository'` e `service.test.ts` com `Cannot find module '/src/modules/auth/service'`. Verde: 7 casos no repositório e 16 no serviço. `getClaims` conferido em `@supabase/auth-js` instalado (três formas de retorno).
+- **Passos 13 e 14.** `docs/SETUP.md` (dois avisos e a subseção "Usuários de teste"), `docs/PRODUCAO.md` (primeira admin) e a seção da T-005 em `docs/TESTES-MANUAIS.md`.
+- **Passo 15.** `db:reset` 0, `db:types` duas vezes sem diferença no git, `db:test` 0 (`Files=2, Tests=54, Result: PASS`), `check` 0 (8 arquivos, 89 testes, build ok). `docs/ARCHITECTURE.md` conferido contra a migration, o teste e o módulo, sem divergência. Conferência de segredos: `ok` para as duas chaves, nenhuma `VAZOU`, só os prefixos e valores inventados que já existiam, nenhum e-mail fora de `allinymaia.test`. A lista de arquivos da branch é a do plano. `db:stop` 0 e nenhum container do Supabase rodando.
+
 ### Desvios do plano
 
+1. **`auto_expose_new_tables = false` ficou, com efeito parcial.** O CLI 3.1.0 aceita a opção, e `db:start`, `db:reset` e `db:test` passam com ela. A sonda (tabela nova em `public` sem nenhum privilégio para `anon`) falhou nas três medições:
+   - Antes da opção: `anon` com todos os privilégios.
+   - Com a opção, depois de `db:stop`, `db:start` e `db:reset`: falhou. A lista de privilégios dessa medição não foi capturada.
+   - Com a opção e volume novo (`npx supabase stop --no-backup`, `db:start`, `db:reset`, a única tentativa prevista): `anon` deixou de ter `SELECT`, `INSERT`, `UPDATE` e `DELETE`, mas continua com `REFERENCES`, `TRIGGER` e `TRUNCATE`.
+
+   Pelo critério do plano, a linha fica. Não foi verificado se o efeito parcial exige volume novo, então o aviso do `docs/SETUP.md` ficou com o texto base. O desenho não depende da opção: a migration revoga tudo e o `010` confere os privilégios exatos de `profiles`. Fica como observação para o `architect`: tabela futura que esqueça o `revoke` nasce com `REFERENCES`, `TRIGGER` e `TRUNCATE` para os papéis da Data API no ambiente local.
+2. **Ajuste de sintaxe no `010_profiles.test.sql`.** A asserção "authenticated só escreve na coluna full_name" lançava `could not determine which collation to use for string comparison` (as colunas de `information_schema` têm collation `C`). As duas consultas da asserção ganharam `collate "C"`. O que ela prova não mudou. O `plan(49)` ficou como estava.
+3. **Formatação.** `repository.test.ts` e `service.test.ts` passaram pelo `prettier --write` (quebras de linha), sem mudança de conteúdo.
+4. **Banco local recriado.** O volume local foi apagado uma vez no passo 4, como o plano previa. Só tinha seed.
+5. **Filtro do passo 13.** O `grep -v '^[-+][-+]'` da verificação esconde linhas acrescentadas que começam com `- ` (os dois avisos). O diff foi conferido pelo `--stat` (16 inserções, 1 remoção).
+
+Nenhum contrato, privilégio, política ou teste foi alterado ou enfraquecido. Nenhum ponto de parada foi atingido.
+
 ### Pendências
+
+1. **Pull request:** abrir pelo link, com destino `release/T-004-T-005` (não `main`): `https://github.com/BrenoCabral/Alliny-Maia/compare/release/T-004-T-005...task/T-005-perfis-papeis-rls?expand=1`. Título: `feat(auth): perfis, papéis e base de RLS (T-005)`. A descrição foi entregue no relatório do agente.
+2. **Testes manuais:** conferir a seção "T-005 Perfis e papéis" de `docs/TESTES-MANUAIS.md`.
+3. **Conflitos com a T-004:** as duas tasks podem mexer em `docs/SETUP.md`, `docs/TESTES-MANUAIS.md` e `BACKLOG.md`. A resolução é manter os trechos das duas.
+4. **CI (T-004):** `npm run db:test` agora depende das contas do seed. No CI, o banco tem de estar no estado do primeiro `npm run db:start` ou de `npm run db:reset` antes do `db:test`.
+5. **Produção:** nada a fazer agora. Na T-008: a migration vai pelo workflow manual, o workflow não usa `--include-seed`, e a primeira admin é criada pelo procedimento de `docs/PRODUCAO.md`, com aprovação do Breno.
+6. **Na máquina do Breno:** depois do merge, `npm run db:stop` e `npm run db:start` (por causa do `config.toml`) e `npm run db:reset` na worktree em que for trabalhar. A stack ficou parada ao fim desta task.
+7. **Para o `architect` (não bloqueia):** o efeito parcial de `auto_expose_new_tables = false` descrito no desvio 1.
