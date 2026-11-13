@@ -1874,6 +1874,7 @@ A task foi marcada no `BACKLOG.md` com o que está provado acima, como define a 
 6. **Passo 14.6:** a conferência dos arquivos intocados usou o commit de partida `4cbfd1b` em vez de `HEAD~12`. São o mesmo commit.
 7. **Passo 15:** o `gh` não existe nesta máquina, como o plano previa. A URL de comparação e o texto do pull request entraram neste registro no mesmo commit do 15.1, sem o commit extra só para o link.
 8. **Passo 15.2:** a T-001 já está na `main` (pull request 3). O aviso de base saiu da descrição do pull request. A `main` tem um commit que esta branch não tem (`.gitignore`, pull request 2). Não foi feito rebase nem merge.
+9. **Depois do pull request aberto:** o primeiro Deploy Preview respondeu "Page not found". O Netlify não rodou o adaptador do Next (`plugin_state: none`, nenhuma função) e publicou a pasta `.next` como arquivos estáticos. Correção no commit `3d9a27d`: `[[plugins]] package = "@netlify/plugin-nextjs"` no `netlify.toml`, ao contrário do que o `architecture.md` previa para esse arquivo. O Deploy Preview seguinte saiu com o adaptador (`@netlify/plugin-nextjs@5.16.6`, uma função) e a captura de tela do Netlify mostra a landing. A função roda em `nodejs24.x`, não em Node 26.
 
 ### Pendências
 
