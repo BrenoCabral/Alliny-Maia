@@ -1,9 +1,0 @@
-{
-  "name": "alliny-maia",
-  "version": "1.0.0",
-  "private": true,
-  "description": "Site Alliny Maia - consultoria de imagem e estilo",
-  "dependencies": {
-    "@supabase/supabase-js": "^2.45.0"
-  }
-}

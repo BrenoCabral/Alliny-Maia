@@ -1,51 +1,32 @@
-# Alliny Maia — Consultoria de Imagem e Estilo
+# Alliny Maia
 
-Site institucional de Alliny Maia (consultora de imagem e estilo, designer de moda e doutora em Arte e Cultura Visual).
+Site e plataforma da consultoria de imagem e estilo de Alliny Maia: site público, painel da consultora, área da cliente com dossiê e servidor MCP para uso com o Claude.
 
-## Serviços
-- Consultoria de imagem estratégica
-- Análise de coloração pessoal
+## Estado atual
+
+O repositório contém o plano completo e o site estático que está no ar (`legacy-site/`). O app é construído task a task, a partir do backlog.
+
+## Por onde começar
+
+| Quero | Leia |
+| --- | --- |
+| Entender o sistema | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |
+| Ver fases, riscos e insumos | [docs/PLANO.md](docs/PLANO.md) |
+| Saber o que fazer agora | [BACKLOG.md](BACKLOG.md) |
+| Entender o processo com agentes | [agent-pipeline.md](agent-pipeline.md) |
+| Montar o ambiente | [docs/SETUP.md](docs/SETUP.md) |
+| Ver por que cada decisão foi tomada | [docs/adr/](docs/adr/README.md) |
+
+## Como trabalhar
+
+```bash
+git clone https://github.com/BrenoCabral/Alliny-Maia.git
+cd Alliny-Maia
+code .
+```
+
+Abra o Claude Code na raiz e peça a próxima task do backlog. O [CLAUDE.md](CLAUDE.md) manda seguir o pipeline `pm -> architect -> dev-planner -> dev-implementer`. Cada task deixa seus documentos em `tasks/T-XXX-slug/`.
 
 ## Stack
-Site estático: um único `index.html` com CSS/JS inline e as imagens em `img/`. Backend opcional via Netlify Functions + Supabase.
 
-## Estrutura
-```
-index.html              páginas e estilos
-img/                    imagens (vitrine, consultoria, coloracao, metodo)
-netlify.toml            config do Netlify (publish, functions, redirect /api)
-netlify/functions/      backend serverless
-  lead.js               POST /api/lead -> grava lead no Supabase
-supabase/schema.sql     tabela de leads
-package.json            dependencia do Supabase para as functions
-.env.example            variaveis de ambiente necessarias
-```
-
-## Deploy no Netlify
-1. Add new site, conectar este repositório.
-2. Sem build command. Publish directory: `.` (raiz).
-3. A cada push na `main`, publica sozinho.
-
-## Backend (Netlify Functions + Supabase)
-O front chama `/api/lead`, o Netlify repassa para a function, e ela grava no Supabase com a `service_role key` (apenas no servidor).
-
-Passos:
-1. No Supabase, rodar `supabase/schema.sql` para criar a tabela `leads`.
-2. No Netlify, em Site settings > Environment variables, definir `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY`.
-3. Chamar do front:
-   ```js
-   await fetch('/api/lead', {
-     method: 'POST',
-     headers: { 'Content-Type': 'application/json' },
-     body: JSON.stringify({ nome, contato, servico, mensagem })
-   });
-   ```
-
-### Segurança
-- A `service_role key` fica só nas env vars do Netlify, nunca no front.
-- RLS ativo na tabela. A `anon key` (se usada no cliente para leitura) precisa de policies próprias; a function ignora o RLS por usar a service_role.
-
-## Observações
-- O hero já está preparado para vídeo: basta adicionar um `<source>` dentro do `<video>` (fashion film mudo, em loop).
-- O retrato da seção "Sobre" é um placeholder, a ser trocado por uma foto da Alliny.
-- Confirmar a licença das imagens antes de publicar.
+Next.js e TypeScript, Supabase (Postgres com RLS, Auth, Storage), MCP próprio com OAuth, Netlify. Ambientes: local em Docker e produção.
