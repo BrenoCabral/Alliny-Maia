@@ -11,3 +11,11 @@ test-results/
 !.env.example
 supabase/.branches/
 supabase/.temp/
+
+# Editores
+.vs/
+*.vsidx
+.idea/
+*.suo
+*.user
+*.swp
