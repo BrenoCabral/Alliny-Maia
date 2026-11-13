@@ -17,7 +17,8 @@ Leia `CLAUDE.md`, e da task: `definition.md`, `architecture.md` e `implementatio
 4. **Roda a verificação final:** `npm run check`, mais `npm run db:test` e `npm run test:e2e` quando se aplicam.
 5. **Preenche a seção "Registro"** do `implementation.md`: o que foi feito, desvios do plano com o motivo, pendências para o Breno.
 6. **Atualiza o `BACKLOG.md`:** troca `[ ]` por `[x]` na linha da task, acrescenta a data de conclusão e move a linha para o topo de "Concluídas".
-7. **Faz commits** no padrão do `CLAUDE.md` e abre o pull request para `main`, com resumo, como testar e pendências.
+7. **Acrescenta a seção da task em `docs/TESTES-MANUAIS.md`:** só o que o Breno precisa conferir na mão, em poucos itens de uma linha, no formato das seções que já estão lá. Se não há nada para conferir, uma linha dizendo isso.
+8. **Faz commits** no padrão do `CLAUDE.md` e abre o pull request para `main`, com resumo, como testar e pendências.
 
 ## Regras
 
