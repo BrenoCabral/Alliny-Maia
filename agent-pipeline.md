@@ -67,6 +67,7 @@ A task só é marcada com X quando:
 3. `npm run db:test` passa, se a task tocou no schema.
 4. `npm run test:e2e` passa, se a task tocou em fluxo coberto por teste de ponta a ponta.
 5. O `implementation.md` tem a seção "Registro" preenchida.
+6. `docs/TESTES-MANUAIS.md` tem a seção da task, curta, com o que o Breno confere na mão.
 
 Se alguma verificação não pôde ser executada, a task não é marcada. O agente explica o que faltou.
 
