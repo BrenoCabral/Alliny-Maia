@@ -12,6 +12,7 @@ const domainModules = [
   "assets",
   "dossier",
   "audit",
+  "health",
 ];
 
 const layerZones = [
@@ -53,6 +54,17 @@ const layerZones = [
     from: "./src/modules/*/repository.ts",
     message:
       "app e mcp não importam repository.ts. Use o service.ts do módulo.",
+  },
+  {
+    target: [
+      "./src/*.{ts,tsx}",
+      "./src/!(modules)/**/*",
+      "./src/modules/*/!(service).{ts,tsx}",
+      "./src/modules/*/*/**/*",
+    ],
+    from: "./src/lib/supabase/admin.ts",
+    message:
+      "O client admin do Supabase (secret key) só pode ser importado por src/modules/*/service.ts.",
   },
 ];
 
