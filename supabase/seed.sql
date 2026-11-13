@@ -1,0 +1,4 @@
+-- Seed do banco local. Roda em `npm run db:reset`, depois das migrations.
+-- Só dados inventados. Dados reais de clientes nunca entram aqui
+-- (regra 6 do CLAUDE.md).
+-- Ainda não há tabelas de domínio. Os primeiros dados chegam na T-005.
