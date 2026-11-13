@@ -1,3 +1,8 @@
 [build]
   command = "npm run build"
   publish = ".next"
+
+# Adaptador do Next declarado de forma explicita. Sem ele, o Netlify publicou
+# a pasta .next como arquivos estaticos e a pagina inicial respondeu 404.
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
