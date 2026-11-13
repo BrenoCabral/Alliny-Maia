@@ -49,8 +49,8 @@ Princípios que orientam o resto do documento:
 | Camada | Escolha | Observação |
 | --- | --- | --- |
 | Linguagem | TypeScript em modo `strict` | Uma linguagem de ponta a ponta |
-| Framework | Next.js (App Router), linha 16 | Fixar a versão no `package.json` no scaffold |
-| UI | React, Tailwind CSS, tokens da marca em variáveis CSS | Painel admin pode usar componentes prontos; site e dossiê seguem o design da marca |
+| Framework | Next.js (App Router), linha 16 | Fixada em 16.4.6 na T-001. Cache Components e Partial Prefetching ligados |
+| UI | React, Tailwind CSS, tokens da marca em variáveis CSS | Painel admin usa shadcn/ui sobre Base UI (ADR 0008); site e dossiê seguem o design da marca |
 | Formulários | react-hook-form + zod | O mesmo schema zod valida no cliente e no servidor |
 | Banco | Supabase Postgres | Migrations SQL em `supabase/migrations` |
 | Autenticação | Supabase Auth com `@supabase/ssr` | Sessão em cookie, lida no servidor |
@@ -62,7 +62,7 @@ Princípios que orientam o resto do documento:
 | CI | GitHub Actions | Ver seção 12 |
 | Gerenciador de pacotes | npm | Sem ajustes extras no Netlify |
 
-Regra para o scaffold e para qualquer biblioteca nova: usar a versão estável mais recente, fixar no `package.json` e consultar a documentação da versão instalada antes de usar uma API. Não confiar em memória para assinatura de função de framework.
+Regra para o scaffold e para qualquer biblioteca nova: usar a versão estável mais recente, fixar no `package.json` e consultar a documentação da versão instalada antes de usar uma API. Não confiar em memória para assinatura de função de framework. Exceção: quando a versão mais recente de uma biblioteca é incompatível com outra ferramenta da stack, vale a mais recente compatível, com o motivo registrado no `architecture.md` da task.
 
 ## 3. Estrutura do repositório
 
@@ -85,6 +85,7 @@ src/
     cliente/               área da cliente
     oauth/consent/         tela de consentimento do OAuth (MCP)
     api/mcp/route.ts       endpoint MCP
+  proxy.ts                 interceptador de requisições do Next (antigo middleware)
   modules/                 domínio, um diretório por contexto
     auth/
     clients/
@@ -131,6 +132,7 @@ mcp  ->  modules  ->  lib
 - `modules` nunca importa de `app` nem de `mcp`.
 - Um módulo só usa outro pelo `service.ts` dele, nunca pelo `repository.ts`.
 - `lib/supabase/admin.ts` (service role) só pode ser importado por `service.ts` e é marcado com `server-only`.
+- `components/ui` e `styles` são folhas de apresentação: podem ser usados por `app` e pelos componentes dos módulos, e só importam de `lib`. `lib` não importa de nenhuma outra pasta de `src`.
 - A regra é imposta por lint (restrição de imports), não por convenção.
 
 ## 4. Modelo de dados
@@ -196,7 +198,7 @@ Cadastro público fica desligado. Contas de cliente só nascem por convite da co
 - Login por e-mail e senha, com recuperação de senha por e-mail.
 - Convite: a consultora cadastra a cliente e dispara o convite. A cliente define a própria senha pelo link.
 - Sessão em cookie, renovada no servidor a cada requisição com `@supabase/ssr`. Server Components e Server Actions leem o usuário no servidor.
-- Rotas `/admin` e `/cliente` protegidas no interceptador de requisições do Next e de novo no layout do servidor.
+- Rotas `/admin` e `/cliente` protegidas no interceptador de requisições do Next (`src/proxy.ts`, convenção `proxy` do Next 16, que substituiu `middleware`) e de novo no layout do servidor.
 - No ambiente local os e-mails caem na caixa de entrada local do Supabase CLI. Nenhum e-mail real é enviado.
 
 ## 7. Arquivos e imagens
