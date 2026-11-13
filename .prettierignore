@@ -3,6 +3,5 @@ out/
 coverage/
 node_modules/
 package-lock.json
-legacy-site/
 .claude/
 *.md

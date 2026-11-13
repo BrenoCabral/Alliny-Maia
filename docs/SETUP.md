@@ -17,7 +17,7 @@ npm install
 npm run dev
 ```
 
-O app abre em `http://localhost:3000`. Por enquanto ele mostra uma página provisória: a landing chega na T-003.
+O app abre em `http://localhost:3000`. Ele mostra a landing do site.
 
 O `npm install` mostra avisos `ERESOLVE overriding peer dependency`. São esperados (o `eslint-plugin-import` ainda não declara suporte ao ESLint 10). Não use `--legacy-peer-deps` nem `--force`.
 
@@ -108,6 +108,8 @@ Este comando ainda não existe. O nome é fixado na task que o cria.
 
 As três do Supabase são lidas no primeiro uso: o build passa sem elas.
 
+No Netlify ninguém precisa cadastrar `NEXT_PUBLIC_SITE_URL`: o endereço público e a regra de indexação vêm do ambiente do build (`CONTEXT`, `URL` e `DEPLOY_PRIME_URL`), em `src/lib/site-url.ts`.
+
 Para gerar os valores locais, com a stack de pé:
 
 ```bash
@@ -122,6 +124,6 @@ Copie para o `.env.local` só as três linhas com os nomes da tabela. A saída t
 - `AGENTS.md` é escrito e mantido pelo `next dev`. Ele manda ler a documentação que vem em `node_modules/next/dist/docs/`. Não edite à mão.
 - Versões de dependências são exatas (`.npmrc` com `save-exact=true`).
 
-## Site estático atual
+## Publicação
 
-Até a T-003, o que está no ar é a pasta `legacy-site/`. Para ver local, abra `legacy-site/index.html` no navegador.
+O Netlify publica o app Next a partir da `main`, com o comando e a pasta definidos no `netlify.toml`. O adaptador do Next é aplicado pelo próprio Netlify, sem plugin no `package.json`.

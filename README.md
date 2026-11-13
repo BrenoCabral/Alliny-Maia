@@ -4,7 +4,7 @@ Site e plataforma da consultoria de imagem e estilo de Alliny Maia: site públic
 
 ## Estado atual
 
-O repositório contém o plano completo, o site estático que está no ar (`legacy-site/`) e o app Next.js na raiz, ainda só com a base e uma página provisória. O app é construído task a task, a partir do backlog.
+O repositório contém o plano completo e o app Next.js na raiz. O site público que está no ar é a landing do app, publicada pelo Netlify a partir da `main`. O restante do app é construído task a task, a partir do backlog.
 
 ## Por onde começar
 
