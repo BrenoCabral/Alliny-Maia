@@ -83,6 +83,5 @@ export default defineConfig([
     "build/**",
     "coverage/**",
     "next-env.d.ts",
-    "legacy-site/**",
   ]),
 ]);

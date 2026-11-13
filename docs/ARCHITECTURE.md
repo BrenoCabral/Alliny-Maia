@@ -107,7 +107,6 @@ supabase/
   seed.sql
   tests/                   testes de banco (pgTAP)
 tests/e2e/                 Playwright
-legacy-site/               site estático atual, removido na T-003
 ```
 
 ### Anatomia de um módulo
@@ -305,6 +304,8 @@ Fluxo de trabalho:
 4. Migrations vão para produção por um workflow manual do GitHub Actions com aprovação, nunca de uma máquina local.
 
 Deploy previews do Netlify não recebem as variáveis do Supabase de produção. Servem para revisar o site público. Fluxos autenticados são validados localmente.
+
+O endereço público do site e a regra de indexação vêm das variáveis que o Netlify injeta no build (`CONTEXT`, `URL` e `DEPLOY_PRIME_URL`), lidas em `src/lib/site-url.ts`. Só o contexto de produção é indexável: Deploy Previews saem com `noindex`.
 
 Ordem segura de publicação quando uma task tem migration: primeiro a migration compatível com o código atual, depois o código.
 

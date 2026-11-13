@@ -66,7 +66,7 @@ Usuários de teste criados pelo seed ficam documentados neste arquivo a partir d
 - `.env.local` guarda os valores locais e nunca vai para o git.
 - `.env.example` lista os nomes das variáveis, sem valores.
 - Valores de produção existem só no Netlify e no GitHub (para o workflow de migrations).
-- Hoje a única variável é `NEXT_PUBLIC_SITE_URL`, opcional, com padrão `http://localhost:3000`. A validação fica em `src/lib/env.ts`: valor inválido derruba o `dev` e o `build` com uma mensagem que cita o nome da variável.
+- Hoje a única variável é `NEXT_PUBLIC_SITE_URL`, opcional, com padrão `http://localhost:3000`. A validação fica em `src/lib/env.ts`: valor inválido derruba o `dev` e o `build` com uma mensagem que cita o nome da variável. No Netlify ninguém precisa cadastrar essa variável: o endereço público e a regra de indexação vêm do ambiente do build (`CONTEXT`, `URL` e `DEPLOY_PRIME_URL`), em `src/lib/site-url.ts`.
 
 ## Notas
 
@@ -74,6 +74,6 @@ Usuários de teste criados pelo seed ficam documentados neste arquivo a partir d
 - `AGENTS.md` é escrito e mantido pelo `next dev`. Ele manda ler a documentação que vem em `node_modules/next/dist/docs/`. Não edite à mão.
 - Versões de dependências são exatas (`.npmrc` com `save-exact=true`).
 
-## Site estático atual
+## Publicação
 
-Até a T-003, o que está no ar é a pasta `legacy-site/`. Para ver local, abra `legacy-site/index.html` no navegador.
+O Netlify publica o app Next a partir da `main`, com o comando e a pasta definidos no `netlify.toml`. O adaptador do Next é aplicado pelo próprio Netlify, sem plugin no `package.json`.
