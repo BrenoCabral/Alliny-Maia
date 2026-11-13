@@ -20,3 +20,12 @@ No Deploy Preview antes do merge, e em https://allinymaia.netlify.app depois:
 - [ ] Os botões de WhatsApp abrem a conversa com a mensagem certa
 - [ ] Os links do menu levam às seções
 - [ ] Um endereço que não existe, como `/xyz`, mostra a página 404 da marca
+
+## T-005 Perfis e papéis
+
+Com o Docker aberto e a stack de pé (`npm run db:start`):
+
+- [ ] `npm run db:reset` e `npm run db:test` terminam sem erro
+- [ ] No Studio (http://localhost:54323), em Authentication, aparecem as três contas de teste do `docs/SETUP.md`
+- [ ] No Studio, a tabela `profiles` tem três linhas: uma `admin` e duas `client`
+- [ ] No Studio, criar um usuário novo em Authentication e ver a linha dele aparecer em `profiles` com papel `client`. Depois, `npm run db:reset` para limpar
