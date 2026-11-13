@@ -305,7 +305,7 @@ Fluxo de trabalho:
 3. Merge em `main` publica o app no Netlify.
 4. Migrations vão para produção por um workflow manual do GitHub Actions com aprovação, nunca de uma máquina local.
 
-O CI é um workflow só, `.github/workflows/ci.yml`, sem segredo nenhum e com permissão só de leitura. Roda em pull request, em `main` e em branches `ci/**`, que são temporárias e servem para exercitar o próprio CI. Cada verificação é um job com nome fixo (`check` e `db`), e são esses nomes que a proteção da `main` exige. O job `db` sobe com o CLI do projeto só os serviços do Supabase de que os testes de banco precisam. Detalhes em `docs/SETUP.md`.
+O CI é um workflow só, `.github/workflows/ci.yml`, sem segredo nenhum e com permissão só de leitura. Roda em pull request, em `main`, em branches de integração `release/**` e em branches `ci/**`. As `ci/**` são temporárias e servem para exercitar o próprio CI. Cada verificação é um job com nome fixo (`check` e `db`), e são esses nomes que a proteção da `main` exige. O job `db` sobe com o CLI do projeto só os serviços do Supabase de que os testes de banco precisam. Detalhes em `docs/SETUP.md`.
 
 Deploy previews do Netlify não recebem as variáveis do Supabase de produção. Servem para revisar o site público. Fluxos autenticados são validados localmente.
 
