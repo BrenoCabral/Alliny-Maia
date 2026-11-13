@@ -1426,7 +1426,7 @@ Execução em 2026-11-13, no worktree da task, com Node 26.3.0, npm 11.16.0 e Do
 ### Pendências
 
 1. **`CLAUDE.md`:** aplicar o texto da seção "Texto sugerido para o `CLAUDE.md`". Nenhum agente editou o arquivo.
-2. **Ordem de merge:** a branch nasceu de `task/T-001-scaffold-next`, que ainda não está na `main`. Mesclar a T-001 antes. Até lá, o pull request da T-002 mostra também os commits da T-001.
+2. **Ordem de merge:** resolvida. Conferido em 2026-11-13 depois do push: a T-001 já está na `origin/main`, e a branch tem só os 14 commits da T-002 à frente dela. O aviso do plano sobre mesclar a T-001 antes não se aplica mais.
 3. **Conflitos com a T-003:** as duas tasks mexem em `package.json`, `package-lock.json`, `docs/SETUP.md`, `docs/ARCHITECTURE.md` e `BACKLOG.md`. No `package-lock.json`, a resolução é aceitar um dos lados e rodar `npm install` de novo, nunca editar à mão.
 4. **Pull request:** o `gh` não existe nesta máquina. Abrir pelo link: `https://github.com/BrenoCabral/Alliny-Maia/compare/main...task/T-002-supabase-local?expand=1`
 5. **Na máquina do Breno, em cada worktree:** Docker Desktop aberto, `npm install` e criar o `.env.local` conforme o `.env.example`.
