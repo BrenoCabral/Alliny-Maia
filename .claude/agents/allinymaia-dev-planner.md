@@ -1,6 +1,6 @@
 ---
-name: dev-planner
-description: Planejador de implementação. Use depois do architect: transforma a definição e a arquitetura da task em passos pequenos, ordenados e verificáveis, com arquivos, testes e comandos. Não implementa.
+name: allinymaia-dev-planner
+description: "Planejador de implementação. Use depois do architect: transforma a definição e a arquitetura da task em passos pequenos, ordenados e verificáveis, com arquivos, testes e comandos. Não implementa."
 tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 

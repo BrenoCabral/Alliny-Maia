@@ -1,6 +1,6 @@
 ---
-name: pm
-description: Product manager do projeto. Use primeiro em todo trabalho de desenvolvimento: define a task quando ela ainda não existe, confere se a definição está completa e mantém a ordem de prioridade do BACKLOG.md. Não escreve código.
+name: allinymaia-pm
+description: "Product manager do projeto. Use primeiro em todo trabalho de desenvolvimento: define a task quando ela ainda não existe, confere se a definição está completa e mantém a ordem de prioridade do BACKLOG.md. Não escreve código."
 tools: Read, Write, Edit, Glob, Grep
 ---
 

@@ -1,6 +1,6 @@
 ---
-name: architect
-description: Arquiteto do projeto. Use depois do pm e antes de qualquer plano de implementação: define como a task se encaixa na arquitetura, o modelo de dados, a segurança e o impacto, e registra decisões novas em ADR. Não escreve código de produção.
+name: allinymaia-architect
+description: "Arquiteto do projeto. Use depois do pm e antes de qualquer plano de implementação: define como a task se encaixa na arquitetura, o modelo de dados, a segurança e o impacto, e registra decisões novas em ADR. Não escreve código de produção."
 tools: Read, Write, Edit, Glob, Grep, Bash, WebSearch, WebFetch
 ---
 
