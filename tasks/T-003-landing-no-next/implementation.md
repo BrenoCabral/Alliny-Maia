@@ -1819,10 +1819,145 @@ Nenhuma bloqueia a execução. Cada uma foi resolvida no plano pelo caminho que 
 
 ## Registro
 
-Preenchido pelo `dev-implementer` ao terminar.
+Preenchido pelo `dev-implementer` em 2026-11-13.
 
 ### O que foi feito
 
+Os 15 passos foram executados na ordem, na branch `task/T-003-landing-no-next`, com um commit por passo. O conteúdo dos arquivos é o do plano, sem alteração.
+
+- Landing estática em `src/app/(site)/page.tsx`, com onze componentes em `src/app/(site)/_components/` e as cinco imagens em `src/app/(site)/_images/` (movidas com `git mv`, renomeação pura).
+- `src/lib/site.ts` (contatos, mensagens e links) e `src/lib/site-url.ts` (endereço público e indexação pelo contexto do Netlify), com testes.
+- Imagem de compartilhamento `opengraph-image.jpg` (1200 x 630, 100085 bytes) e texto alternativo.
+- Página 404 em `src/app/not-found.tsx`.
+- Layout raiz com `metadataBase`, título com modelo, `robots` por contexto e `viewport-fit=cover`.
+- `netlify.toml` com `npm run build` e `.next`.
+- `legacy-site/` removida e referências atualizadas em `eslint.config.mjs`, `.prettierignore`, `README.md`, `docs/ARCHITECTURE.md` e `docs/SETUP.md`.
+
+Verificações executadas (Windows 11, Node 26.3.0, npm 11.16.0):
+
+| # | Verificação | Resultado |
+| --- | --- | --- |
+| 1 | `npm run check`, sem `.env` e sem variável do Supabase, `CONTEXT`, `URL`, `DEPLOY_PRIME_URL` ou `NEXT_PUBLIC_SITE_URL` no ambiente | saída 0. "All matched files use Prettier code style!" |
+| 2 | Saída do `next build` | `○ /`, `○ /_not-found`, `○ /opengraph-image-12o0cb.jpg`, com `○ (Static) prerendered as static content` |
+| 3 | `npm run test` | 5 arquivos, 54 testes passando. Prova negativa do `copy.test.ts`: com um travessão temporário em `closing.tsx`, 1 teste falhou e a saída foi 1. A mudança foi desfeita |
+| 4 | `next start`: `/` | 200, `h1` "A sua imagem comunica antes de você falar.", `canonical` e `og:url` em `http://localhost:3000`, `og:image` com tipo, 1200 x 630 e texto alternativo, `twitter:card` `summary_large_image`, `noindex, nofollow`, 0 `<video>`, 4 âncoras, 6 links de WhatsApp (2 sem texto, 2 de atendimentos, 1 de consultoria, 1 de coloração), 7 `rel="noopener noreferrer"`, 5 imagens por `/_next/image`. Uma imagem pedida ao otimizador respondeu 200 `image/jpeg`. A imagem de compartilhamento respondeu 200 `image/jpeg` |
+| 4 | `next start`: URL inexistente | 404, título "Página não encontrada · Alliny Maia", `h1` em `text-brand-green`, botão "Voltar ao início", `noindex` |
+| 5 | Build com `CONTEXT=production`, `URL=https://example.com` | saída 0. `index, follow`, 0 ocorrências de `noindex`, `canonical`, `og:url` e `og:image` em `https://example.com` |
+| 6 | Build com `CONTEXT=deploy-preview` | saída 0. `noindex, nofollow`, `canonical` em `https://deploy-preview-7--example.netlify.app` |
+| 7 | `NEXT_PUBLIC_SITE_URL=nao-e-url npm run build` | saída 1. "Variáveis de ambiente inválidas ou ausentes: NEXT_PUBLIC_SITE_URL." e 0 ocorrências de `nao-e-url` no log |
+| 8 | `git grep -n "legacy-site" -- . ":!tasks" ":!CLAUDE.md"` | nada |
+| 9 | Diff de `package.json`, `package-lock.json`, `src/lib/env.ts`, `src/lib/env.test.ts`, `next.config.ts`, `CLAUDE.md`, `src/styles/fonts.ts`, `tsconfig.json`, `vitest.config.mts`, `AGENTS.md`, `agent-pipeline.md` e `.claude` contra o commit de partida | vazio |
+| 10 | Lista de leitura 14.7 | marcada, abaixo |
+
+Lista 14.7, conferida contra `legacy-site/index.html` do commit anterior à remoção:
+
+- [x] Mesma ordem: topo, hero, credenciais, consultoria, coloração, método, sobre, fechamento, rodapé.
+- [x] Textos idênticos, um por um, inclusive "R$ 490" e "100% online".
+- [x] Pontos de quebra só em 621 (4 usos), 761 (1) e 861 (10). Nenhum `sm:`, `md:`, `lg:` ou `xl:`.
+- [x] Nenhum elemento dentro de título (coberto pelo `copy.test.ts`).
+- [x] Nenhuma sombra.
+- [x] Links externos com `target="_blank"` e `rel="noopener noreferrer"`.
+
+Não executadas, por não se aplicarem: `npm run db:test` (sem schema, o comando não existe nesta branch) e `npm run test:e2e` (o Playwright entra na T-006).
+
+O que este registro não prova: a medição de equivalência visual em oito larguras, descrita em "Como este plano foi conferido", foi feita pelo `dev-planner` e não foi repetida aqui. A página também não foi aberta em navegador nesta execução. A equivalência foi conferida por leitura do CSS e pelo HTML servido. A conferência visual é do Breno, no Deploy Preview.
+
+A task foi marcada no `BACKLOG.md` com o que está provado acima, como define a seção 8 do `architecture.md`. O primeiro critério de aceite (página em produção) só se confirma depois do merge, e essa confirmação é do Breno.
+
 ### Desvios do plano
 
+1. **Porta 3003 em vez de 3113** nas conferências locais, por instrução da orquestração. Só o processo que escutava nessa porta foi derrubado a cada vez.
+2. **Arquivos criados por extração dos blocos de código deste plano**, com um script fora do repositório, em vez de digitação. O conteúdo é byte a byte o do plano.
+3. **Passo 13.1:** depois do `git rm -r legacy-site` sobraram no disco as pastas vazias `legacy-site/img` e `legacy-site`, que o git não rastreia. Foram removidas com `rmdir`.
+4. **Passo 13, verificação:** `git grep -n "legacy-site" -- CLAUDE.md | wc -l` devolveu 1, e não "2 ou mais". As duas ocorrências estão na mesma linha. Nada a corrigir.
+5. **Passo 14.1:** `git grep -il "supabase" -- src` devolveu `src/modules/README.md`, e o plano esperava nada. É documentação da T-001 sobre a regra de dependência. A mesma busca restrita a `.ts`, `.tsx` e `.css` não devolve nada, que é o que o critério pede.
+6. **Passo 14.6:** a conferência dos arquivos intocados usou o commit de partida `4cbfd1b` em vez de `HEAD~12`. São o mesmo commit.
+7. **Passo 15:** o `gh` não existe nesta máquina, como o plano previa. A URL de comparação e o texto do pull request entraram neste registro no mesmo commit do 15.1, sem o commit extra só para o link.
+8. **Passo 15.2:** a T-001 já está na `main` (pull request 3). O aviso de base saiu da descrição do pull request. A `main` tem um commit que esta branch não tem (`.gitignore`, pull request 2). Não foi feito rebase nem merge.
+
 ### Pendências
+
+Para o Breno:
+
+1. **Abrir o pull request**, porque o `gh` não está instalado: https://github.com/BrenoCabral/Alliny-Maia/compare/main...task/T-003-landing-no-next?expand=1. Título: `feat(site): landing no Next e deploy no Netlify (T-003)`. A descrição está no fim deste registro.
+2. **Deploy Preview, antes do merge:** log de build sem erro e sem variável do Supabase, página servida pelo Next (o código-fonte tem `/_next/`), visual equivalente ao de produção em celular e desktop. Enquanto o merge não acontece, produção ainda mostra o site antigo: dá para comparar as duas abas lado a lado. Se o site não tiver Deploy Preview ligado, ligar ou aceitar conferir direto em produção.
+3. **No Deploy Preview:** uma URL inexistente mostra a 404 da marca (é o que exercita a função do adaptador com Node 26, risco da seção 9 do `architecture.md`), as imagens carregam, os botões abrem o WhatsApp com a mensagem certa, o código-fonte tem `noindex`.
+4. **Painel do Netlify:** conferir que não há diretório base configurado que contradiga o `netlify.toml`. Nenhuma variável de ambiente precisa ser cadastrada.
+5. **Merge na `main`.** É ele que troca o que está em produção.
+6. **Produção, depois do merge:** página inicial no ar e código-fonte sem `noindex`. É aqui que o primeiro critério de aceite se confirma. Se algo sair errado, republicar o deploy anterior pelo painel do Netlify.
+7. **`CLAUDE.md`, seção "Estado atual":** fica desatualizada. Texto sugerido: "O site público é o app Next, publicado pelo Netlify a partir da `main` desde a T-003. A pasta `legacy-site/` não existe mais."
+8. **Merge com a T-002:** as duas tasks mexem em `BACKLOG.md` e `docs/SETUP.md`. Quem entrar depois resolve o conflito.
+9. **`docs/SETUP.md`, seção "Primeiro uso":** a frase "Por enquanto ele mostra uma página provisória: a landing chega na T-003" ficou desatualizada. Corrigir na T-002 ou junto com o `CLAUDE.md`.
+10. **Insumos em aberto, sem bloqueio:** retrato definitivo da Alliny (trocar `src/app/(site)/_images/sobre.jpg`) e confirmação de licença das imagens.
+
+Para o `architect`: os cinco itens de "Dúvidas devolvidas ao architect" continuam valendo como estão. Nenhum bloqueou a execução.
+
+Sugestões de task para o `pm`: `robots.txt`, `sitemap.xml` e favicon, que o `architecture.md` deixou para a T-008 ou task própria.
+
+### Descrição do pull request
+
+Texto para colar ao abrir o pull request:
+
+````md
+## Resumo
+
+- A landing passa a ser uma página estática do app Next (`src/app/(site)/page.tsx`), só com Server Components, com o mesmo visual do site estático.
+- As cinco imagens saem de `legacy-site/img/` para `src/app/(site)/_images/` e passam por `next/image`. Imagem de compartilhamento de 1200 x 630 em `opengraph-image.jpg`.
+- Contatos e links de WhatsApp e Instagram em um único arquivo: `src/lib/site.ts`.
+- Endereço público e indexação resolvidos pelas variáveis que o Netlify injeta no build (`src/lib/site-url.ts`). Só produção é indexável. Deploy Preview sai com `noindex`. Nenhuma variável precisa ser cadastrada.
+- Página 404 no padrão visual (`src/app/not-found.tsx`).
+- `netlify.toml` roda `npm run build` e publica `.next`.
+- `legacy-site/` removida, com as referências atualizadas em `eslint.config.mjs`, `.prettierignore`, `README.md`, `docs/ARCHITECTURE.md` e `docs/SETUP.md`.
+- `package.json`, `package-lock.json`, `src/lib/env.ts`, `next.config.ts` e `CLAUDE.md` não mudam.
+
+A T-001 já está na `main`. Este pull request tem só os commits da T-003.
+
+## Como testar
+
+```
+npm ci
+npm run check
+npm run build && npm run start
+```
+
+Abrir `http://localhost:3000/` e uma URL inexistente, por exemplo `http://localhost:3000/nao-existe`.
+
+## Verificações executadas localmente
+
+| Verificação | Resultado |
+| --- | --- |
+| `npm run check`, sem `.env` e sem variável do Supabase | saída 0. Lint e Prettier limpos, 5 arquivos de teste e 54 testes passando |
+| Saída do `next build` | `○ /`, `○ /_not-found` e `○ /opengraph-image-12o0cb.jpg`, todos `○ (Static) prerendered as static content` |
+| `next start`, `/` | 200, com o `h1`, `og:image`, `canonical` em `http://localhost:3000` e `noindex, nofollow` (fora do Netlify é o esperado). Cinco imagens por `/_next/image`, nenhum `<video>` |
+| `next start`, URL inexistente | 404 com a página da marca e `noindex` |
+| Imagem de compartilhamento | 200 `image/jpeg` |
+| Build com `CONTEXT=production` e `URL=https://example.com` | `index, follow`, nenhum `noindex`, `canonical`, `og:url` e `og:image` em `https://example.com` |
+| Build com `CONTEXT=deploy-preview` | `noindex, nofollow` e `canonical` no endereço de `DEPLOY_PRIME_URL` |
+| `NEXT_PUBLIC_SITE_URL=nao-e-url npm run build` | falha citando o nome da variável, sem o valor |
+| `git grep legacy-site` fora de `tasks/` e do `CLAUDE.md` | nada |
+| Conferência por leitura contra o HTML e o CSS antigos | mesma ordem de seções, textos idênticos, pontos de quebra só em 621, 761 e 861 px, nenhuma sombra, nenhum elemento dentro de título |
+
+Não executadas, por não se aplicarem: `npm run db:test` (sem schema) e `npm run test:e2e` (o Playwright entra na T-006).
+
+O servidor local foi usado na porta 3003, e não na 3113 do plano, por instrução da orquestração.
+
+## O que só o Breno confere
+
+1. **Deploy Preview, antes do merge:** log de build sem erro e sem variável do Supabase, página servida pelo Next (o código-fonte tem `/_next/`), visual equivalente ao de produção em celular e desktop. Enquanto o merge não acontece, produção ainda mostra o site antigo: dá para comparar as duas abas lado a lado. Se o site não tiver Deploy Preview ligado, ligar ou aceitar conferir direto em produção.
+2. **No Deploy Preview:** uma URL inexistente mostra a 404 da marca (é o que exercita a função do adaptador com Node 26), as imagens carregam, os botões abrem o WhatsApp com a mensagem certa, o código-fonte tem `noindex`.
+3. **Painel do Netlify:** conferir que não há diretório base configurado que contradiga o `netlify.toml`. Comando e pasta de publicação do painel são vencidos pelo arquivo. Nenhuma variável de ambiente precisa ser cadastrada.
+4. **Merge na `main`.** É ele que troca o que está em produção.
+5. **Produção, depois do merge:** página inicial no ar e código-fonte sem `noindex`. É aqui que o primeiro critério de aceite se confirma.
+6. **`CLAUDE.md`, seção "Estado atual":** fica desatualizada e nenhum agente edita esse arquivo sem pedido. Texto sugerido: "O site público é o app Next, publicado pelo Netlify a partir da `main` desde a T-003. A pasta `legacy-site/` não existe mais."
+7. **Merge com a T-002:** as duas tasks mexem em `BACKLOG.md` e `docs/SETUP.md`. Quem entrar depois resolve o conflito, que fica em linhas vizinhas do backlog.
+8. **`docs/SETUP.md`, seção "Primeiro uso":** a frase "Por enquanto ele mostra uma página provisória: a landing chega na T-003" fica desatualizada. Não foi alterada para manter pequeno o conflito com a T-002.
+9. **Insumos em aberto, sem bloqueio:** retrato definitivo da Alliny (trocar `src/app/(site)/_images/sobre.jpg`) e confirmação de licença das imagens.
+
+## Aviso
+
+O merge na `main` troca o que está em produção: o site estático dá lugar ao app Next. Caminho de volta: republicar o deploy anterior pelo painel do Netlify.
+
+A linha da T-003 no `BACKLOG.md` já vem marcada como concluída neste pull request, com o que foi provado localmente. A confirmação em produção é do Breno, e o merge é o aceite.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+````
