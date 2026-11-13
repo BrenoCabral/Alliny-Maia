@@ -81,8 +81,22 @@ Avisos:
 - Porta 54321 a 54324 ocupada costuma ser outra stack do Supabase na máquina: `npx supabase stop --all`.
 - O CLI avisa que os serviços locais escutam em todas as interfaces de rede e que o Studio não tem senha. Pare a stack em rede que não seja de confiança.
 - O CLI vem com telemetria de uso ligada. Para desligar: `npx supabase telemetry disable`.
+- `npm run db:test` pressupõe o banco no estado de `npm run db:reset`: os testes usam as contas do seed. Se você criou ou alterou dados à mão, rode `npm run db:reset` antes.
+- Mudança no `supabase/config.toml` só vale depois de `npm run db:stop` e `npm run db:start`.
 
-Usuários de teste criados pelo seed ficam documentados neste arquivo a partir da T-005.
+### Usuários de teste
+
+Criados pelo `supabase/seed.sql`. São contas inventadas, só existem no banco local e são recriadas a cada `npm run db:reset`.
+
+| E-mail | Papel | Nome |
+| --- | --- | --- |
+| `admin@allinymaia.test` | `admin` | Admin de Teste |
+| `cliente1@allinymaia.test` | `client` | Cliente Um de Teste |
+| `cliente2@allinymaia.test` | `client` | Cliente Dois de Teste |
+
+Senha das três: `Local-Teste-2026`
+
+A tela de login chega na T-006. Até lá, as contas aparecem no Studio, em Authentication, e os perfis na tabela `profiles`.
 
 ## A partir da T-006
 
