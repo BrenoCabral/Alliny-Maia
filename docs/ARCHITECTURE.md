@@ -76,6 +76,7 @@ docs/
   ARCHITECTURE.md          este documento
   PLANO.md                 fases, marcos, riscos e insumos
   SETUP.md                 ambiente local
+  PRODUCAO.md              procedimentos manuais em produção
   adr/                     decisões de arquitetura
 src/
   app/                     rotas: UI e handlers, sem regra de negócio
@@ -169,14 +170,18 @@ Convenções de banco:
 - Nomes de tabelas e colunas em inglês, `snake_case`.
 - `jsonb` só para conteúdo cuja forma é definida por schema versionado no código (`answers`, `content`). Tudo que é filtrado ou relacionado vira coluna.
 - Migrations só andam para frente. Uma migration aplicada nunca é editada.
+- A migration que cria uma tabela declara os privilégios dela: tira tudo de `anon`, `authenticated` e `service_role` e concede só o que cada papel usa, por operação e, quando preciso, por coluna. Privilégio, RLS e políticas vão juntos, e o projeto não depende da exposição automática de tabelas novas pela Data API.
+- Funções `security definer` e funções de gatilho ficam no schema `private`, que a Data API não expõe, sempre com `search_path` vazio e nomes qualificados.
 
 ## 5. Autorização
 
-O papel do usuário fica em `profiles.role`. Uma função `is_admin()` (security definer, com `search_path` fixo) responde se o usuário atual é admin e é usada nas políticas.
+O papel do usuário fica em `profiles.role`. Uma função `private.is_admin()` (security definer, com `search_path` fixo, fora dos schemas expostos pela Data API) responde se o usuário atual é admin e é usada nas políticas. Ela lê a tabela a cada consulta, então uma troca de papel vale na hora, sem esperar o token expirar.
+
+Todo perfil nasce com papel `client`, criado por gatilho quando o usuário é criado no Auth. O papel nunca vem dos metadados do usuário. Ninguém troca `role` pela Data API, nem a admin: a coluna não tem privilégio de escrita para os papéis da API. Promover ou rebaixar alguém é operação manual no banco, descrita em `docs/PRODUCAO.md`.
 
 | Tabela | Admin | Cliente |
 | --- | --- | --- |
-| `profiles` | lê e edita todos | lê e edita o próprio (sem trocar `role`) |
+| `profiles` | lê todos e edita o nome de todos (sem trocar `role`) | lê o próprio e edita o próprio nome (sem trocar `role`) |
 | `clients` | tudo | lê o próprio registro |
 | `client_intakes`, `client_notes` | tudo | sem acesso |
 | `assets` | tudo | lê os do próprio cadastro que estejam em dossiê publicado |
