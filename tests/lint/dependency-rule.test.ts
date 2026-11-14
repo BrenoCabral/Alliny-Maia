@@ -1,5 +1,5 @@
 import { ESLint } from "eslint";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
 // Prova a regra de dependência com o eslint.config.mjs real, sem deixar
 // arquivo quebrado no repositório. A regra import/no-restricted-paths ignora
@@ -9,6 +9,16 @@ import { describe, expect, it } from "vitest";
 const RULE_ID = "import/no-restricted-paths";
 
 const eslint = new ESLint();
+
+// A primeira chamada a lintText carrega a configuração, o parser de
+// TypeScript e o plugin de import. Em partida a frio isso passa do limite de
+// 5 s por teste. O custo fica aqui, com limite próprio, e não no primeiro
+// teste do arquivo.
+beforeAll(async () => {
+  await eslint.lintText('import "@/lib/env";\n', {
+    filePath: "src/modules/clients/service.ts",
+  });
+}, 60_000);
 
 async function restrictedImportMessages(code: string, filePath: string) {
   const [result] = await eslint.lintText(code, { filePath });

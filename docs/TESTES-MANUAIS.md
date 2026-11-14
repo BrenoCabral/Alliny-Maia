@@ -20,3 +20,15 @@ No Deploy Preview antes do merge, e em https://allinymaia.netlify.app depois:
 - [ ] Os botões de WhatsApp abrem a conversa com a mensagem certa
 - [ ] Os links do menu levam às seções
 - [ ] Um endereço que não existe, como `/xyz`, mostra a página 404 da marca
+
+## T-004 CI no GitHub Actions
+
+No GitHub:
+
+- [ ] No pull request da task para `release/T-004-T-005`, as verificações `check` e `db` aparecem, disparadas pelo próprio pull request, e ficam verdes
+- [ ] Depois do merge na `release/T-004-T-005`, na aba Actions, o `CI` dessa branch termina verde
+- [ ] No pull request da T-005, o job `db` fica verde com a migration de verdade, inclusive o passo "Conferir tipos do banco"
+- [ ] Depois do merge na `main`, na aba Actions, o `CI` da `main` termina verde
+- [ ] A proteção da `main` foi ativada como no `docs/SETUP.md`, com `check` e `db` obrigatórias
+- [ ] Em um pull request qualquer aberto depois disso, o botão de merge só libera com as duas verdes
+- [ ] No repositório não ficou nenhuma branch `ci/`
