@@ -13,7 +13,6 @@ Fonte oficial do que fazer e em que ordem. O processo está em `agent-pipeline.m
 
 ### Fase 1. Acesso
 
-- [ ] **T-005** Perfis, papéis e base de RLS. [definição](tasks/T-005-perfis-papeis-rls/definition.md) · [pasta](tasks/T-005-perfis-papeis-rls/)
 - [ ] **T-006** Autenticação e proteção de rotas. [definição](tasks/T-006-autenticacao-e-rotas/definition.md) · [pasta](tasks/T-006-autenticacao-e-rotas/)
 - [ ] **T-007** Cadastro de clientes e convite. [definição](tasks/T-007-clientes-e-convite/definition.md) · [pasta](tasks/T-007-clientes-e-convite/)
 - [ ] **T-008** Supabase de produção e pipeline de migrations. [definição](tasks/T-008-producao-e-migrations/definition.md) · [pasta](tasks/T-008-producao-e-migrations/)
@@ -54,6 +53,7 @@ Fonte oficial do que fazer e em que ordem. O processo está em `agent-pipeline.m
 
 Mais recentes primeiro. Formato: `- [x] **T-XXX** Título. [definição](...) · [pasta](...) · concluída em AAAA-MM-DD`
 
+- [x] **T-005** Perfis, papéis e base de RLS. [definição](tasks/T-005-perfis-papeis-rls/definition.md) · [pasta](tasks/T-005-perfis-papeis-rls/) · concluída em 2026-11-13
 - [x] **T-004** CI no GitHub Actions. [definição](tasks/T-004-ci-github-actions/definition.md) · [pasta](tasks/T-004-ci-github-actions/) · concluída em 2026-11-13
 - [x] **T-003** Landing no Next e deploy no Netlify. [definição](tasks/T-003-landing-no-next/definition.md) · [pasta](tasks/T-003-landing-no-next/) · concluída em 2026-11-13
 - [x] **T-002** Supabase local e base de desenvolvimento. [definição](tasks/T-002-supabase-local/definition.md) · [pasta](tasks/T-002-supabase-local/) · concluída em 2026-11-13

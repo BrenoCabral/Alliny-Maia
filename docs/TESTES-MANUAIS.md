@@ -32,3 +32,12 @@ No GitHub:
 - [ ] A proteção da `main` foi ativada como no `docs/SETUP.md`, com `check` e `db` obrigatórias
 - [ ] Em um pull request qualquer aberto depois disso, o botão de merge só libera com as duas verdes
 - [ ] No repositório não ficou nenhuma branch `ci/`
+
+## T-005 Perfis e papéis
+
+Com o Docker aberto e a stack de pé (`npm run db:start`):
+
+- [ ] `npm run db:reset` e `npm run db:test` terminam sem erro
+- [ ] No Studio (http://localhost:54323), em Authentication, aparecem as três contas de teste do `docs/SETUP.md`
+- [ ] No Studio, a tabela `profiles` tem três linhas: uma `admin` e duas `client`
+- [ ] No Studio, criar um usuário novo em Authentication e ver a linha dele aparecer em `profiles` com papel `client`. Depois, `npm run db:reset` para limpar
