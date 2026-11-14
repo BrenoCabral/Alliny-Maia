@@ -27,6 +27,8 @@ mcp  ->  modules  ->  lib
 - Um módulo só usa outro pelo `service.ts` dele, nunca pelo `repository.ts`.
 - `app` e `mcp` também não importam `repository.ts`: chamam o `service.ts`.
 - Acesso ao Supabase só em `repository.ts`.
+- `src/proxy.ts` é borda, como `app`: usa o módulo pelo `service.ts` e pelos arquivos sem acesso a dados. Não importa `repository.ts`, `app` nem `mcp`.
+- Dentro de um módulo, só `actions.ts` e `components/` importam `next/navigation`. `mcp` não importa `actions.ts`.
 - `components/ui` e `styles` só importam de `lib`. `lib` não importa de nenhuma outra pasta de `src`.
 
 A regra é imposta pelo lint (`import/no-restricted-paths` em `eslint.config.mjs`) e provada em `tests/lint/dependency-rule.test.ts`. Um import proibido faz `npm run lint` falhar.
