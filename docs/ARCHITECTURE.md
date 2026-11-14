@@ -135,6 +135,8 @@ mcp  ->  modules  ->  lib
 - `lib/supabase/admin.ts` (service role) só pode ser importado por `service.ts` e é marcado com `server-only`.
 - O `service.ts` escolhe e cria o client do Supabase (sessão da usuária ou admin) e passa para o `repository.ts`, que recebe o client como parâmetro e é o único que faz consultas.
 - `components/ui` e `styles` são folhas de apresentação: podem ser usados por `app` e pelos componentes dos módulos, e só importam de `lib`. `lib` não importa de nenhuma outra pasta de `src`.
+- `src/proxy.ts` é borda, como `app`: importa de `modules` (pelo `service.ts` e pelos arquivos sem acesso a dados) e de `lib`. Não importa `repository.ts`, `app` nem `mcp`.
+- Dentro de um módulo, só `actions.ts` e `components/` importam `next/navigation`. `service.ts`, `repository.ts`, `schemas.ts` e os demais arquivos não dependem da navegação do Next, porque o MCP usa os mesmos serviços. `mcp` não importa `actions.ts`.
 - A regra é imposta por lint (restrição de imports), não por convenção.
 
 ## 4. Modelo de dados
@@ -205,6 +207,11 @@ Cadastro público fica desligado. Contas de cliente só nascem por convite da co
 - Convite: a consultora cadastra a cliente e dispara o convite. A cliente define a própria senha pelo link.
 - Sessão em cookie, renovada no servidor a cada requisição com `@supabase/ssr`. Server Components e Server Actions leem o usuário no servidor.
 - Rotas `/admin` e `/cliente` protegidas no interceptador de requisições do Next (`src/proxy.ts`, convenção `proxy` do Next 16, que substituiu `middleware`) e de novo no layout do servidor.
+- Telas de acesso: `/entrar`, `/recuperar-senha`, `/confirmar-acesso` (chegada do link de e-mail) e `/definir-senha`. Sair é uma server action, sem tela. Nenhuma delas é indexada.
+- O interceptador só roda nas rotas de acesso e nas áreas protegidas. O site público não passa por ele. É ele que renova a sessão e redireciona: sem sessão vai para `/entrar`, papel errado vai para a área do próprio papel. O papel vem sempre de `profiles`, nunca do token.
+- Entrar, sair, pedir recuperação e trocar senha são server actions do módulo `auth`, com o client de servidor. O navegador não fala com o Auth.
+- O link de recuperação leva um `token_hash`, trocado por sessão no servidor (`verifyOtp`) só quando a pessoa confirma na tela. Isso exige modelo de e-mail próprio, versionado em `supabase/templates/`. O modelo padrão do Supabase não funciona com este app.
+- Sem as variáveis do Supabase (Deploy Previews, e produção até a T-008), o site público funciona normalmente, as áreas protegidas levam a `/entrar` e as telas de acesso avisam que o acesso está indisponível.
 - No ambiente local os e-mails caem na caixa de entrada local do Supabase CLI. Nenhum e-mail real é enviado.
 
 ## 7. Arquivos e imagens
@@ -306,11 +313,11 @@ Dois ambientes, ver ADR 0005:
 Fluxo de trabalho:
 
 1. Uma branch por task: `task/T-XXX-slug`.
-2. Pull request para `main`. O CI roda lint, typecheck, testes unitários, build e testes de banco em um Supabase efêmero, e reprova se os tipos gerados do banco não correspondem às migrations.
+2. Pull request para `main`. O CI roda lint, typecheck, testes unitários, build, testes de banco e testes de ponta a ponta em um Supabase efêmero, e reprova se os tipos gerados do banco não correspondem às migrations.
 3. Merge em `main` publica o app no Netlify.
 4. Migrations vão para produção por um workflow manual do GitHub Actions com aprovação, nunca de uma máquina local.
 
-O CI é um workflow só, `.github/workflows/ci.yml`, sem segredo nenhum e com permissão só de leitura. Roda em pull request, em `main`, em branches de integração `release/**` e em branches `ci/**`. As `ci/**` são temporárias e servem para exercitar o próprio CI. Cada verificação é um job com nome fixo (`check` e `db`), e são esses nomes que a proteção da `main` exige. O job `db` sobe com o CLI do projeto só os serviços do Supabase de que os testes de banco precisam. Detalhes em `docs/SETUP.md`.
+O CI é um workflow só, `.github/workflows/ci.yml`, sem segredo nenhum e com permissão só de leitura. Roda em pull request, em `main`, em branches de integração `release/**` e em branches `ci/**`. As `ci/**` são temporárias e servem para exercitar o próprio CI. Cada verificação é um job com nome fixo (`check`, `db` e `e2e`), e são esses nomes que a proteção da `main` exige. Os jobs `db` e `e2e` sobem com o CLI do projeto só os serviços do Supabase de que precisam. O `e2e` roda os testes de ponta a ponta contra o build de produção do app, com as chaves públicas da stack efêmera e sem a secret key. Detalhes em `docs/SETUP.md`.
 
 Deploy previews do Netlify não recebem as variáveis do Supabase de produção. Servem para revisar o site público. Fluxos autenticados são validados localmente.
 
