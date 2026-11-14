@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { parseEnv, publicEnvSchema, supabasePublicEnvSchema } from "@/lib/env";
 
@@ -80,6 +80,67 @@ describe("supabasePublicEnvSchema", () => {
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: invalidValue,
     });
     expect(message).toContain("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY");
+    expect(message).not.toContain(invalidValue);
+  });
+});
+
+describe("isSupabaseConfigured", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  // getSupabasePublicEnv guarda o resultado em variável de módulo: cada caso
+  // carrega o módulo de novo, com as variáveis do caso.
+  async function load(url: string | undefined, key: string | undefined) {
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", url);
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", key);
+    vi.resetModules();
+    const { isSupabaseConfigured } = await import("@/lib/env");
+    return isSupabaseConfigured;
+  }
+
+  function errorMessage(run: () => unknown) {
+    try {
+      run();
+    } catch (error) {
+      return error instanceof Error ? error.message : String(error);
+    }
+    return "";
+  }
+
+  it("devolve false, sem lançar, com as duas variáveis ausentes", async () => {
+    const isSupabaseConfigured = await load(undefined, undefined);
+    expect(isSupabaseConfigured()).toBe(false);
+  });
+
+  it("devolve false, sem lançar, com as duas variáveis vazias", async () => {
+    const isSupabaseConfigured = await load("", "");
+    expect(isSupabaseConfigured()).toBe(false);
+  });
+
+  it("devolve true com as duas variáveis válidas", async () => {
+    const isSupabaseConfigured = await load(
+      "http://127.0.0.1:54321",
+      "sb_publishable_teste",
+    );
+    expect(isSupabaseConfigured()).toBe(true);
+  });
+
+  it("lança e cita a variável que falta quando só uma está presente", async () => {
+    const isSupabaseConfigured = await load("http://127.0.0.1:54321", "");
+    expect(errorMessage(isSupabaseConfigured)).toContain(
+      "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
+    );
+  });
+
+  it("lança para variável presente e inválida, sem expor o valor", async () => {
+    const invalidValue = "valor-que-nao-e-url";
+    const isSupabaseConfigured = await load(
+      invalidValue,
+      "sb_publishable_teste",
+    );
+    const message = errorMessage(isSupabaseConfigured);
+    expect(message).toContain("NEXT_PUBLIC_SUPABASE_URL");
     expect(message).not.toContain(invalidValue);
   });
 });

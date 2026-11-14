@@ -50,3 +50,17 @@ export function getSupabasePublicEnv(): SupabasePublicEnv {
   });
   return cachedSupabasePublicEnv;
 }
+
+// Diz se o ambiente tem o Supabase configurado. Sem as duas variáveis
+// públicas (Deploy Previews, e produção até a T-008) devolve false e não
+// lança. Com alguma presente, valida: configuração quebrada tem de aparecer,
+// não virar "indisponível". O acesso continua literal, um nome por linha.
+export function isSupabaseConfigured(): boolean {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  if (!url && !publishableKey) {
+    return false;
+  }
+  getSupabasePublicEnv();
+  return true;
+}
