@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <title>Redefinir a senha</title>
+  </head>
+  <body style="font-family: Arial, Helvetica, sans-serif; color: #23231e">
+    <h1 style="font-size: 20px; font-weight: normal; color: #1f3f1a">
+      Redefinir a senha
+    </h1>
+    <p>
+      Alguém pediu para redefinir a senha da sua conta no site de Alliny Maia.
+    </p>
+    <p>
+      <a
+        href="{{ .SiteURL }}/confirmar-acesso?token_hash={{ .TokenHash }}&type=recovery"
+        >Definir uma senha nova</a
+      >
+    </p>
+    <p>O link vale por 1 hora e só pode ser usado uma vez.</p>
+    <p>Se não foi você, ignore este e-mail.</p>
+  </body>
+</html>
