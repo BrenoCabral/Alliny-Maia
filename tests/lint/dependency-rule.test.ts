@@ -160,6 +160,21 @@ describe("src/proxy.ts é borda independente", () => {
     expect(messages).toHaveLength(0);
   });
 
+  it("ninguém importa o proxy", async () => {
+    for (const filePath of [
+      "src/modules/clients/service.ts",
+      "src/lib/example.ts",
+      "src/components/ui/example.tsx",
+      "src/styles/example.ts",
+    ]) {
+      const messages = await restrictedImportMessages(
+        'import "@/proxy";\n',
+        filePath,
+      );
+      expect(messages, filePath).toHaveLength(1);
+    }
+  });
+
   it("acusa import de actions.ts de módulo dentro de mcp", async () => {
     const messages = await restrictedImportMessages(
       'import "@/modules/auth/actions";\n',
