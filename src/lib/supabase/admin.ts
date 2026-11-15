@@ -3,11 +3,15 @@ import "server-only";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
-import { getSupabasePublicEnv, parseEnv } from "@/lib/env";
+import {
+  getSupabasePublicEnv,
+  isSupabaseConfigured,
+  parseEnv,
+} from "@/lib/env";
 import type { Database } from "@/lib/supabase/database.types";
 
 // A secret key ignora RLS. Este é o único arquivo que lê a variável, e o lint
-// só deixa src/modules/*/service.ts importá-lo.
+// só deixa src/modules/clients/service.ts importá-lo.
 const secretEnvSchema = z.object({
   SUPABASE_SECRET_KEY: z.string().startsWith("sb_secret_"),
 });
@@ -25,4 +29,14 @@ export function createSupabaseAdminClient(): SupabaseClient<Database> {
       detectSessionInUrl: false,
     },
   });
+}
+
+// Diz se o ambiente tem a secret key. Não lança para variável ausente: sem
+// ela (Deploy Previews, produção até a T-008) o convite responde que não está
+// disponível. Chave presente e malformada aparece em createSupabaseAdminClient.
+export function isSupabaseAdminConfigured(): boolean {
+  if (!isSupabaseConfigured()) {
+    return false;
+  }
+  return Boolean(process.env.SUPABASE_SECRET_KEY);
 }
