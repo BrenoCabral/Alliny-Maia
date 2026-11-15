@@ -115,3 +115,61 @@ jobs:
           fi
           summary="$(tail -n 30 "$log" | sed -e 's/\x1b\[[0-9;?]*[A-Za-z]//g' -e 's/\r//g' -e 's/%/%25/g' | awk 'BEGIN { ORS = "%0A" } { print }')"
           echo "::error title=Resumo da falha (${GITHUB_JOB})::${summary}"
+
+  e2e:
+    name: e2e
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Node
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci 2>&1 | tee "$RUNNER_TEMP/step.log"
+
+      - name: Instalar navegador
+        run: npx playwright install --with-deps chromium 2>&1 | tee "$RUNNER_TEMP/step.log"
+
+      - name: Subir o Supabase
+        run: npm run db:start -- --exclude studio,imgproxy,edge-runtime,realtime 2>&1 | tee "$RUNNER_TEMP/step.log"
+
+      - name: Gerar variáveis de ambiente
+        run: |
+          log="$RUNNER_TEMP/step.log"
+          echo "Gerando o .env.local a partir do supabase status." | tee "$log"
+          npx supabase status -o env \
+            --override-name api.url=NEXT_PUBLIC_SUPABASE_URL \
+            --override-name auth.publishable_key=NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY \
+            --override-name auth.secret_key=SUPABASE_SECRET_KEY \
+            2>/dev/null |
+            grep -E '^(NEXT_PUBLIC_SUPABASE_URL|NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY)=' > .env.local || true
+          for name in NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY; do
+            if ! grep -q "^${name}=" .env.local; then
+              echo "Faltou ${name} na saída do supabase status." | tee -a "$log"
+              echo "::error::Faltou ${name} na saída do supabase status. O .env.local do job não foi gerado."
+              exit 1
+            fi
+          done
+          echo "Variáveis geradas: $(cut -d= -f1 .env.local | tr '\n' ' ')" | tee -a "$log"
+
+      - name: Testes de ponta a ponta
+        run: npm run test:e2e 2>&1 | tee "$RUNNER_TEMP/step.log"
+
+      - name: Resumo da falha
+        if: failure()
+        run: |
+          log="$RUNNER_TEMP/step.log"
+          if [ ! -s "$log" ]; then
+            echo "::error title=Resumo da falha (${GITHUB_JOB})::O passo que falhou não deixou saída registrada."
+            exit 0
+          fi
+          summary="$(tail -n 30 "$log" | sed -e 's/\x1b\[[0-9;?]*[A-Za-z]//g' -e 's/\r//g' -e 's/%/%25/g' | awk 'BEGIN { ORS = "%0A" } { print }')"
+          echo "::error title=Resumo da falha (${GITHUB_JOB})::${summary}"
