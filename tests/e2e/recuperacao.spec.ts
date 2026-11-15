@@ -24,7 +24,7 @@ let usedLink: string | undefined;
 async function requestRecovery(page: Page, email: string) {
   await page.goto("/recuperar-senha");
   await page.getByLabel("E-mail").fill(email);
-  await page.getByRole("button", { name: "Enviar link" }).click();
+  await page.getByRole("button", { name: "Enviar link", exact: true }).click();
   await expect(formStatus(page)).toHaveText(messages.recoveryRequested);
   return formStatus(page).innerText();
 }
@@ -64,15 +64,15 @@ test("recuperação completa pela caixa de e-mails local", async ({ page }) => {
   const newPassword = `Rodada-${Date.now()}-senha`;
 
   await page.goto(usedLink);
-  await page.getByRole("button", { name: "Continuar" }).click();
+  await page.getByRole("button", { name: "Continuar", exact: true }).click();
   await expect(page).toHaveURL("/definir-senha");
 
   await page.getByLabel("Senha nova").fill(newPassword);
   await page.getByLabel("Confirmar senha").fill(newPassword);
-  await page.getByRole("button", { name: "Salvar senha" }).click();
+  await page.getByRole("button", { name: "Salvar senha", exact: true }).click();
   await expect(page).toHaveURL("/cliente");
   await expect(
-    page.getByRole("heading", { level: 1, name: "Sua área" }),
+    page.getByRole("heading", { level: 1, name: "Sua área", exact: true }),
   ).toBeVisible();
 
   await signOut(page);
@@ -91,16 +91,16 @@ test("recuperação completa pela caixa de e-mails local", async ({ page }) => {
   await page.goto("/definir-senha");
   await page.getByLabel("Senha nova").fill(SEED_PASSWORD);
   await page.getByLabel("Confirmar senha").fill(SEED_PASSWORD);
-  await page.getByRole("button", { name: "Salvar senha" }).click();
+  await page.getByRole("button", { name: "Salvar senha", exact: true }).click();
   await expect(page).toHaveURL("/cliente");
 });
 
 test("link de recuperação já usado não vale mais", async ({ page }) => {
   expect(usedLink, "o teste anterior usou o link").toBeDefined();
   await page.goto(usedLink!);
-  await page.getByRole("button", { name: "Continuar" }).click();
+  await page.getByRole("button", { name: "Continuar", exact: true }).click();
   await expect(formAlert(page)).toHaveText(messages.invalidLink);
   await expect(
-    page.getByRole("link", { name: "Pedir novo link" }),
+    page.getByRole("link", { name: "Pedir novo link", exact: true }),
   ).toHaveAttribute("href", "/recuperar-senha");
 });

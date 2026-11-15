@@ -45,7 +45,7 @@ test("cliente entra, fica na própria área e sai", async ({ page }) => {
   await page.goto("/admin");
   await expect(page).toHaveURL("/cliente");
   await expect(
-    page.getByRole("heading", { level: 1, name: "Sua área" }),
+    page.getByRole("heading", { level: 1, name: "Sua área", exact: true }),
   ).toBeVisible();
 
   await signOut(page);
@@ -59,7 +59,7 @@ test("visitante sem sessão vai para o login", async ({ page }) => {
   expect(pathOf(page)).toEqual({ pathname: "/entrar", next: "/admin" });
   expect(response?.headers()["x-robots-tag"]).toContain("noindex");
   await expect(
-    page.getByRole("heading", { level: 1, name: "Entrar" }),
+    page.getByRole("heading", { level: 1, name: "Entrar", exact: true }),
   ).toBeVisible();
 
   await page.goto("/cliente");
@@ -105,7 +105,7 @@ for (const externalNext of ["https://example.com", "//example.com"]) {
 test("não existe cadastro público", async ({ page }) => {
   await page.goto("/entrar");
   await expect(
-    page.getByRole("heading", { level: 1, name: "Entrar" }),
+    page.getByRole("heading", { level: 1, name: "Entrar", exact: true }),
   ).toBeVisible();
   const signUpName = /cadastr|criar conta|registr|sign ?up/i;
   await expect(page.getByRole("link", { name: signUpName })).toHaveCount(0);

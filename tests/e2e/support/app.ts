@@ -26,7 +26,7 @@ export async function submitSignIn(
 ) {
   await page.getByLabel("E-mail").fill(email);
   await page.getByLabel("Senha", { exact: true }).fill(password);
-  await page.getByRole("button", { name: "Entrar" }).click();
+  await page.getByRole("button", { name: "Entrar", exact: true }).click();
 }
 
 // Login sempre pela tela, com conta do seed.
@@ -39,12 +39,12 @@ export async function signIn(
   await submitSignIn(page, account.email, password);
   await expect(page).toHaveURL(account.home);
   await expect(
-    page.getByRole("heading", { level: 1, name: account.heading }),
+    page.getByRole("heading", { level: 1, name: account.heading, exact: true }),
   ).toBeVisible();
 }
 
 export async function signOut(page: Page) {
-  await page.getByRole("button", { name: "Sair" }).click();
+  await page.getByRole("button", { name: "Sair", exact: true }).click();
   await expect(page).toHaveURL("/entrar");
 }
 
