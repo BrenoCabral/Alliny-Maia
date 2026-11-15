@@ -58,3 +58,20 @@ No GitHub e no Netlify:
 - [ ] No pull request, a verificação `e2e` aparece e fica verde, junto com `check` e `db`
 - [ ] No Deploy Preview do Netlify, a landing abre normalmente e `/admin` leva a `/entrar`, que avisa que o acesso está indisponível
 - [ ] Depois do merge na `main`, `e2e` foi acrescentada às verificações obrigatórias
+
+## T-007 Cadastro de clientes e convite
+
+Com o Docker aberto, a stack de pé (`npm run db:stop` e `npm run db:start`, por causa do `config.toml`), `npm run db:reset` e `npm run dev`:
+
+- [ ] Em `/admin/clientes`, criar uma cliente só com o nome, editar, buscar pelo nome e pelo e-mail
+- [ ] Arquivar: some da lista, aparece em "Arquivadas", reativa
+- [ ] Criar outra com o mesmo e-mail em maiúsculas mostra o aviso de e-mail repetido
+- [ ] Em "Cliente Convite de Teste", enviar o convite: o e-mail aparece em `http://127.0.0.1:54324`, em português, e o link leva até a senha e a `/cliente`
+- [ ] O painel mostra "Convite enviado" antes e "Acesso ativo" depois, e o e-mail trava
+- [ ] Corrigir o e-mail antes do aceite cancela o convite, e o link antigo deixa de valer
+- [ ] "Cliente Sem E-mail de Teste" não pode ser convidada e a tela diz o motivo
+- [ ] Entrar com `cliente2@allinymaia.test` (arquivada) cai em `/cliente`
+- [ ] A landing, `/entrar` e `/cliente` estão com a mesma aparência de antes
+- [ ] O painel está legível no celular e no desktop
+- [ ] No pull request, `check`, `db` e `e2e` ficam verdes
+- [ ] Depois, `npm run db:reset`

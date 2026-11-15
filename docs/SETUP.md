@@ -102,6 +102,31 @@ Entre em `http://localhost:3000/entrar`. A admin cai em `/admin` e as clientes e
 
 Se o login mostrar "Muitas tentativas", é o limite do Auth local: 30 pedidos de login a cada 5 minutos. Espere alguns minutos.
 
+### Cadastros de clientes do seed
+
+Também criados pelo `supabase/seed.sql`, com dados inventados. Aparecem em `/admin/clientes`.
+
+| Nome | E-mail | Status | Acesso |
+| --- | --- | --- | --- |
+| Cliente Um de Teste | `cliente1@allinymaia.test` | Ativa | Acesso ativo (login da cliente 1) |
+| Cliente Dois de Teste | `cliente2@allinymaia.test` | Arquivada | Acesso ativo (login da cliente 2) |
+| Cliente Convite de Teste | `convite@allinymaia.test` | Ativa | Sem convite. É o alvo do convite manual |
+| Cliente Sem E-mail de Teste | sem e-mail | Ativa | Sem convite. Não pode ser convidada |
+
+A cliente 2 nasce arquivada de propósito: arquivar não tira o acesso, e ela continua entrando em `/cliente`.
+
+Como testar o convite na mão:
+
+1. Entre como admin e abra `/admin/clientes`.
+2. Abra "Cliente Convite de Teste" e aperte "Enviar convite".
+3. Abra a caixa de e-mails local em `http://127.0.0.1:54324` e siga o link do e-mail.
+4. Aperte "Continuar", crie a senha e confira que caiu em `/cliente`.
+5. Depois, `npm run db:reset`.
+
+O convite usa a `SUPABASE_SECRET_KEY` do `.env.local`. Sem ela, o cadastro funciona e o botão de convite responde que o convite não está disponível neste ambiente.
+
+Os links de e-mail locais (convite e recuperação de senha) valem 24 horas e só podem ser usados uma vez.
+
 ## Testes de ponta a ponta
 
 `npm run test:e2e` faz o build de produção, sobe o app com `npm run start` em `http://localhost:3000` e roda os testes de `tests/e2e/` no Chromium, pelo Playwright.
@@ -114,18 +139,25 @@ Antes de rodar:
 
 O que os testes fazem:
 
-- Entram sempre pela tela `/entrar`, com as contas do seed. Não usam a secret key.
-- Leem a caixa de e-mails local (`http://127.0.0.1:54324`) para seguir o link de recuperação de senha.
-- Trocam a senha da cliente 2 (`cliente2@allinymaia.test`) e restauram a senha do seed no fim. As outras contas não mudam.
+- Entram sempre pela tela `/entrar`. Não usam a secret key nem client do Supabase: o lint proíbe `tests/e2e/` de importar o Supabase.
+- O app usa a `SUPABASE_SECRET_KEY` do `.env.local` para o convite. Por isso o `.env.local` precisa das três variáveis.
+- Leem a caixa de e-mails local (`http://127.0.0.1:54324`) para seguir os links de recuperação de senha e de convite.
+- Trocam a senha da cliente 2 (`cliente2@allinymaia.test`) e restauram a senha do seed no fim. As outras contas do seed não mudam.
+- Criam cadastros de clientes e uma conta de cliente a cada rodada, com nomes e e-mails de sufixo único, no domínio `allinymaia.test`. Não alteram os cadastros do seed. Rodadas seguidas não colidem.
 
-Depois de uma rodada inteira, `npm run db:test` continua passando, sem `npm run db:reset` no meio. Se uma rodada for interrompida durante o teste de recuperação, a cliente 2 fica com outra senha: rode `npm run db:reset`.
+Depois de uma rodada inteira, `npm run db:test` continua passando, sem `npm run db:reset` no meio. Para limpar os cadastros e as contas que os testes deixaram: `npm run db:reset`.
+
+Rodada interrompida pede `npm run db:reset` em dois casos:
+
+- Durante o teste de recuperação de senha: a cliente 2 fica com outra senha.
+- Durante o teste de convite para conta existente: ele cria um cadastro com o e-mail da admin e libera o e-mail no fim. Se parar no meio, a próxima rodada não consegue criar o cadastro de novo.
 
 Avisos:
 
 - O endereço tem de ser `http://localhost:3000`. É o `site_url` do Auth local, e o link do e-mail e os cookies dependem dele. `127.0.0.1:3000` não serve.
-- Os testes precisam da stack com o `supabase/config.toml` desta branch (política de senha e modelo do e-mail de recuperação). Depois de trocar de branch ou de worktree: `npm run db:stop`, `npm run db:start` e `npm run db:reset`.
+- Os testes precisam da stack com o `supabase/config.toml` desta branch (política de senha, modelos dos e-mails de recuperação e de convite e links de 24 horas). Depois de trocar de branch ou de worktree: `npm run db:stop`, `npm run db:start` e `npm run db:reset`.
 - Um `npm run db:reset` ou `npm run db:stop` de outra worktree no meio da rodada derruba os testes.
-- Uma rodada faz 9 logins. Mais de três rodadas seguidas em 5 minutos batem no limite do Auth local e os testes de login falham com "Muitas tentativas". Espere.
+- Uma rodada faz 12 logins. Duas rodadas seguidas cabem no limite de 30 logins por 5 minutos do Auth local. A terceira pode falhar com "Muitas tentativas". Espere.
 - Para rodar um arquivo só, depois de um build: `npx playwright test tests/e2e/acesso.spec.ts`.
 
 ## CI (GitHub Actions)
@@ -136,7 +168,7 @@ O workflow `CI` (`.github/workflows/ci.yml`) roda em todo pull request, em push 
 | --- | --- |
 | `check` | `npm ci`, lint, typecheck, testes unitários e build, na ordem do `npm run check` |
 | `db` | Sobe um Supabase efêmero com o CLI do projeto, roda `npm run db:test`, regenera os tipos e compara com o arquivo versionado |
-| `e2e` | Sobe um Supabase efêmero com a caixa de e-mails, gera o `.env.local` com as duas variáveis públicas e roda `npm run test:e2e` contra o build de produção. Não recebe a secret key |
+| `e2e` | Sobe um Supabase efêmero com a caixa de e-mails, gera o `.env.local` com as três variáveis da stack efêmera e roda `npm run test:e2e` contra o build de produção. A secret key do job é a chave local que o CLI gera na hora: não é segredo do GitHub e não dá acesso a nada fora do runner. Os testes entram só pela tela. No fim, confere que a secret key não foi parar no bundle do navegador |
 
 Como ler uma falha: o nome do passo que falhou diz a causa.
 
@@ -152,8 +184,9 @@ Como ler uma falha: o nome do passo que falhou diz a causa.
 | `db`, "Conferir tipos do banco" | Migration nova sem regenerar os tipos |
 | `e2e`, "Instalar navegador" | Falha ao baixar o Chromium ou as dependências de sistema do Playwright |
 | `e2e`, "Subir o Supabase" | Migration com erro de SQL, `config.toml` ou modelo de e-mail inválido, ou falha ao baixar imagem |
-| `e2e`, "Gerar variáveis de ambiente" | A saída do `supabase status` não trouxe a URL ou a publishable key |
+| `e2e`, "Gerar variáveis de ambiente" | A saída do `supabase status` não trouxe a URL, a publishable key ou a secret key |
 | `e2e`, "Testes de ponta a ponta" | Build quebrado com as variáveis do Supabase, ou teste de ponta a ponta falhando. Cada teste que falha vira uma anotação |
+| `e2e`, "Conferir o bundle do navegador" | O prefixo da secret key apareceu em arquivo de `.next/static`. Não faça merge: é código de servidor indo para o navegador |
 | Qualquer um, "Instalar dependências" | `package-lock.json` fora de sincronia com o `package.json` |
 
 Tipos desatualizados: `npm run db:reset`, `npm run db:types` e commit de `src/lib/supabase/database.types.ts`.
