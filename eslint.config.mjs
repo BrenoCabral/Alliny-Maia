@@ -75,7 +75,12 @@ const layerZones = [
   {
     target: [
       "./src/*.{ts,tsx}",
-      "./src/!(modules)/**/*",
+      "./src/!(modules|lib)/**/*",
+      "./src/lib/*.{ts,tsx}",
+      "./src/lib/!(supabase)/**/*",
+      // O teste do próprio arquivo é a única exceção em lib.
+      "./src/lib/supabase/!(admin.test).{ts,tsx}",
+      "./src/lib/supabase/*/**/*",
       "./src/modules/*/!(service).{ts,tsx}",
       "./src/modules/*/*/**/*",
     ],

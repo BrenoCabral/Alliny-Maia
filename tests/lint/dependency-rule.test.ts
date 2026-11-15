@@ -105,12 +105,24 @@ describe("client admin do Supabase só em service.ts de módulo", () => {
       "src/modules/clients/service.test.ts",
       "src/modules/clients/components/example.tsx",
       "src/lib/supabase/server.ts",
+      "src/lib/supabase/server.test.ts",
+      "src/lib/supabase/nested/example.ts",
+      "src/lib/env.ts",
+      "src/lib/nested/example.ts",
       "src/proxy.ts",
     ]) {
       const messages = await restrictedImportMessages(code, filePath);
       expect(messages, filePath).toHaveLength(1);
       expect(messages[0], filePath).toContain("client admin do Supabase");
     }
+  });
+
+  it("aceita o import no teste do próprio client admin", async () => {
+    const messages = await restrictedImportMessages(
+      code,
+      "src/lib/supabase/admin.test.ts",
+    );
+    expect(messages).toHaveLength(0);
   });
 
   it("aceita o import em service.ts de módulo", async () => {
