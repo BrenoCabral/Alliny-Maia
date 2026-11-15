@@ -237,7 +237,7 @@ max_frequency = "1s"
 # Number of characters used in the email OTP.
 otp_length = 6
 # Number of seconds before the email OTP expires (defaults to 1 hour).
-otp_expiry = 3600
+otp_expiry = 86400
 
 # Use a production-ready SMTP server
 # [auth.email.smtp]
@@ -249,10 +249,12 @@ otp_expiry = 3600
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
 
-# Uncomment to customize email template
-# [auth.email.template.invite]
-# subject = "You have been invited"
-# content_path = "./supabase/templates/invite.html"
+# Modelo do e-mail de convite (T-007). O link leva um token_hash para
+# /confirmar-acesso, com type=invite. O modelo padrão do Supabase não
+# funciona com este app.
+[auth.email.template.invite]
+subject = "Seu acesso à área de clientes · Alliny Maia"
+content_path = "./supabase/templates/invite.html"
 
 # Modelo do e-mail de recuperação de senha (T-006). O link leva um token_hash
 # para /confirmar-acesso. O modelo padrão do Supabase não funciona com este app.

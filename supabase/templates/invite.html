@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <title>Seu acesso à área de clientes</title>
+  </head>
+  <body style="font-family: Arial, Helvetica, sans-serif; color: #23231e">
+    <h1 style="font-size: 20px; font-weight: normal; color: #1f3f1a">
+      Seu acesso à área de clientes
+    </h1>
+    <p>Alliny Maia criou um acesso para você na área de clientes do site.</p>
+    <p>
+      <a
+        href="{{ .SiteURL }}/confirmar-acesso?token_hash={{ .TokenHash }}&type=invite"
+        >Criar minha senha</a
+      >
+    </p>
+    <p>O link vale por 24 horas e só pode ser usado uma vez.</p>
+    <p>Se você não esperava este e-mail, ignore.</p>
+  </body>
+</html>
