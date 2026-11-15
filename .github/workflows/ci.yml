@@ -150,8 +150,8 @@ jobs:
             --override-name auth.publishable_key=NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY \
             --override-name auth.secret_key=SUPABASE_SECRET_KEY \
             2>/dev/null |
-            grep -E '^(NEXT_PUBLIC_SUPABASE_URL|NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY)=' > .env.local || true
-          for name in NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY; do
+            grep -E '^(NEXT_PUBLIC_SUPABASE_URL|NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY|SUPABASE_SECRET_KEY)=' > .env.local || true
+          for name in NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY SUPABASE_SECRET_KEY; do
             if ! grep -q "^${name}=" .env.local; then
               echo "Faltou ${name} na saída do supabase status." | tee -a "$log"
               echo "::error::Faltou ${name} na saída do supabase status. O .env.local do job não foi gerado."
@@ -162,6 +162,23 @@ jobs:
 
       - name: Testes de ponta a ponta
         run: npm run test:e2e 2>&1 | tee "$RUNNER_TEMP/step.log"
+
+      - name: Conferir o bundle do navegador
+        run: |
+          log="$RUNNER_TEMP/step.log"
+          echo "Procurando o prefixo da secret key em .next/static." | tee "$log"
+          if [ ! -d .next/static ]; then
+            echo "A pasta .next/static não existe: o build não rodou." | tee -a "$log"
+            echo "::error::A pasta .next/static não existe. A conferência do bundle não pôde ser feita."
+            exit 1
+          fi
+          found="$(grep -rl "sb_secret_" .next/static || true)"
+          if [ -n "$found" ]; then
+            echo "$found" | tee -a "$log"
+            echo "::error::O prefixo da secret key apareceu em arquivo de .next/static. A lista de arquivos está no resumo."
+            exit 1
+          fi
+          echo "Nenhuma ocorrência em .next/static." | tee -a "$log"
 
       - name: Resumo da falha
         if: failure()
