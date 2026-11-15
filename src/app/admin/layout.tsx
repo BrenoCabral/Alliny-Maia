@@ -19,7 +19,11 @@ async function AdminShell({ children }: { children: ReactNode }) {
   const user = await requireAdminPage();
 
   return (
-    <div className="flex flex-1 flex-col bg-white text-neutral-900">
+    // data-admin-ui liga o tema do shadcn/ui (src/styles/admin-theme.css).
+    <div
+      data-admin-ui
+      className="flex flex-1 flex-col bg-white text-neutral-900"
+    >
       <header className="border-b border-neutral-200">
         <div className="mx-auto flex max-w-[1180px] flex-wrap items-center gap-x-6 gap-y-2 px-[22px] py-3 text-sm">
           <p className="font-medium">
