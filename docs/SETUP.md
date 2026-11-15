@@ -36,6 +36,7 @@ Para trabalhar em uma task, abra o Claude Code na raiz e peça a próxima task d
 | `npm run typecheck` | Gera os tipos de rota do Next e roda o `tsc` |
 | `npm run test` | Testes unitários (Vitest) |
 | `npm run test:watch` | Vitest em modo de observação |
+| `npm run test:e2e` | Testes de ponta a ponta (Playwright). Faz o build antes. Exige a stack local de pé |
 | `npm run check` | Lint, typecheck, testes unitários e build, nessa ordem |
 
 Antes de abrir um pull request, `npm run check` tem de passar.
@@ -97,15 +98,35 @@ Criados pelo `supabase/seed.sql`. São contas inventadas, só existem no banco l
 
 Senha das três: `Local-Teste-2026`
 
-A tela de login chega na T-006. Até lá, as contas aparecem no Studio, em Authentication, e os perfis na tabela `profiles`.
+Entre em `http://localhost:3000/entrar`. A admin cai em `/admin` e as clientes em `/cliente`.
 
-## A partir da T-006
+Se o login mostrar "Muitas tentativas", é o limite do Auth local: 30 pedidos de login a cada 5 minutos. Espere alguns minutos.
 
-Este comando ainda não existe. O nome é fixado na task que o cria.
+## Testes de ponta a ponta
 
-| Comando | Faz | Task |
-| --- | --- | --- |
-| `npm run test:e2e` | Testes de ponta a ponta | T-006 |
+`npm run test:e2e` faz o build de produção, sobe o app com `npm run start` em `http://localhost:3000` e roda os testes de `tests/e2e/` no Chromium, pelo Playwright.
+
+Antes de rodar:
+
+1. Stack local de pé (`npm run db:start`) e `.env.local` criado.
+2. Uma vez por máquina: `npx playwright install chromium`.
+3. Porta 3000 livre. Se o `npm run dev` estiver aberto, feche. O Playwright não reaproveita servidor que já está rodando.
+
+O que os testes fazem:
+
+- Entram sempre pela tela `/entrar`, com as contas do seed. Não usam a secret key.
+- Leem a caixa de e-mails local (`http://127.0.0.1:54324`) para seguir o link de recuperação de senha.
+- Trocam a senha da cliente 2 (`cliente2@allinymaia.test`) e restauram a senha do seed no fim. As outras contas não mudam.
+
+Depois de uma rodada inteira, `npm run db:test` continua passando, sem `npm run db:reset` no meio. Se uma rodada for interrompida durante o teste de recuperação, a cliente 2 fica com outra senha: rode `npm run db:reset`.
+
+Avisos:
+
+- O endereço tem de ser `http://localhost:3000`. É o `site_url` do Auth local, e o link do e-mail e os cookies dependem dele. `127.0.0.1:3000` não serve.
+- Os testes precisam da stack com o `supabase/config.toml` desta branch (política de senha e modelo do e-mail de recuperação). Depois de trocar de branch ou de worktree: `npm run db:stop`, `npm run db:start` e `npm run db:reset`.
+- Um `npm run db:reset` ou `npm run db:stop` de outra worktree no meio da rodada derruba os testes.
+- Uma rodada faz 9 logins. Mais de três rodadas seguidas em 5 minutos batem no limite do Auth local e os testes de login falham com "Muitas tentativas". Espere.
+- Para rodar um arquivo só, depois de um build: `npx playwright test tests/e2e/acesso.spec.ts`.
 
 ## CI (GitHub Actions)
 
@@ -115,6 +136,7 @@ O workflow `CI` (`.github/workflows/ci.yml`) roda em todo pull request, em push 
 | --- | --- |
 | `check` | `npm ci`, lint, typecheck, testes unitários e build, na ordem do `npm run check` |
 | `db` | Sobe um Supabase efêmero com o CLI do projeto, roda `npm run db:test`, regenera os tipos e compara com o arquivo versionado |
+| `e2e` | Sobe um Supabase efêmero com a caixa de e-mails, gera o `.env.local` com as duas variáveis públicas e roda `npm run test:e2e` contra o build de produção. Não recebe a secret key |
 
 Como ler uma falha: o nome do passo que falhou diz a causa.
 
@@ -128,6 +150,10 @@ Como ler uma falha: o nome do passo que falhou diz a causa.
 | `db`, "Testes de banco" | Tabela de `public` sem RLS ou teste de RLS falhando |
 | `db`, "Regenerar tipos do banco" | A geração dos tipos falhou. Não é diferença de tipos |
 | `db`, "Conferir tipos do banco" | Migration nova sem regenerar os tipos |
+| `e2e`, "Instalar navegador" | Falha ao baixar o Chromium ou as dependências de sistema do Playwright |
+| `e2e`, "Subir o Supabase" | Migration com erro de SQL, `config.toml` ou modelo de e-mail inválido, ou falha ao baixar imagem |
+| `e2e`, "Gerar variáveis de ambiente" | A saída do `supabase status` não trouxe a URL ou a publishable key |
+| `e2e`, "Testes de ponta a ponta" | Build quebrado com as variáveis do Supabase, ou teste de ponta a ponta falhando. Cada teste que falha vira uma anotação |
 | Qualquer um, "Instalar dependências" | `package-lock.json` fora de sincronia com o `package.json` |
 
 Tipos desatualizados: `npm run db:reset`, `npm run db:types` e commit de `src/lib/supabase/database.types.ts`.
@@ -154,7 +180,7 @@ Quem ativa é o Breno, no GitHub, depois que o `CI` já tiver rodado na `main`. 
 1. Settings, Branches, "Add classic branch protection rule".
 2. "Branch name pattern": `main`.
 3. Marque "Require a pull request before merging". Deixe as aprovações obrigatórias desmarcadas ou em zero: com uma pessoa só no repositório, exigir aprovação trava todo merge.
-4. Marque "Require status checks to pass before merging". Na busca, selecione `check` e `db`. Se não aparecerem, espere o `CI` da `main` terminar e recarregue a página.
+4. Marque "Require status checks to pass before merging". Na busca, selecione `check`, `db` e `e2e`. Se não aparecerem, espere o `CI` da `main` terminar e recarregue a página.
 5. Marque "Require branches to be up to date before merging". Dois pull requests com migration, cada um com os tipos certos para a própria base, podem deixar a `main` com tipos desatualizados se entrarem sem atualizar. Com a opção marcada, o segundo precisa do botão "Update branch" e o CI roda de novo.
 6. Marque "Do not allow bypassing the above settings", para a regra valer também para quem é dono do repositório. Em emergência: desmarque, faça o merge e marque de novo.
 7. "Create".
@@ -162,8 +188,8 @@ Quem ativa é o Breno, no GitHub, depois que o `CI` já tiver rodado na `main`. 
 Cuidados:
 
 - Não marque como obrigatórias as verificações do Netlify. O Deploy Preview é para revisão visual.
-- Quando a T-006 entrar, acrescente `e2e` à lista.
-- Nunca renomeie os jobs `check` e `db` sem ajustar a proteção. A verificação com o nome antigo fica esperando para sempre e trava o merge.
+- A verificação `e2e` existe desde a T-006. Ela só pode ser marcada como obrigatória depois que o `CI` rodar na `main` com ela.
+- Nunca renomeie os jobs `check`, `db` e `e2e` sem ajustar a proteção. A verificação com o nome antigo fica esperando para sempre e trava o merge.
 - Os rótulos das telas do GitHub podem mudar. O que importa é o que fica marcado.
 
 ## Variáveis de ambiente
@@ -181,6 +207,8 @@ Cuidados:
 | `SUPABASE_SECRET_KEY` | Chave de servidor, ignora RLS. Começa com `sb_secret_`. Nunca vai para o navegador |
 
 As três do Supabase são lidas no primeiro uso: o build passa sem elas.
+
+Sem as duas variáveis públicas do Supabase (Deploy Previews, e produção até a T-008), a landing funciona normalmente, `/admin` e `/cliente` levam a `/entrar`, e as telas de acesso avisam que o acesso está indisponível. As variáveis públicas entram no build: mudar o `.env.local` exige build novo.
 
 No Netlify ninguém precisa cadastrar `NEXT_PUBLIC_SITE_URL`: o endereço público e a regra de indexação vêm do ambiente do build (`CONTEXT`, `URL` e `DEPLOY_PRIME_URL`), em `src/lib/site-url.ts`.
 

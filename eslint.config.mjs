@@ -18,7 +18,7 @@ const domainModules = [
 const layerZones = [
   {
     target: "./src/modules",
-    from: ["./src/app", "./src/mcp"],
+    from: ["./src/app", "./src/mcp", "./src/proxy.ts"],
     message:
       "modules não importa de app nem de mcp. A dependência é app/mcp -> modules -> lib.",
   },
@@ -30,12 +30,13 @@ const layerZones = [
       "./src/modules",
       "./src/components",
       "./src/styles",
+      "./src/proxy.ts",
     ],
     message: "lib não importa de nenhuma outra pasta de src.",
   },
   {
     target: ["./src/components", "./src/styles"],
-    from: ["./src/app", "./src/mcp", "./src/modules"],
+    from: ["./src/app", "./src/mcp", "./src/modules", "./src/proxy.ts"],
     message:
       "components e styles são folhas de apresentação: só importam de lib.",
   },
@@ -54,6 +55,22 @@ const layerZones = [
     from: "./src/modules/*/repository.ts",
     message:
       "app e mcp não importam repository.ts. Use o service.ts do módulo.",
+  },
+  {
+    target: "./src/proxy.ts",
+    from: "./src/modules/*/repository.ts",
+    message: "O proxy não importa repository.ts. Use o service.ts do módulo.",
+  },
+  {
+    target: "./src/proxy.ts",
+    from: ["./src/app", "./src/mcp"],
+    message: "O proxy é borda independente: não importa de app nem de mcp.",
+  },
+  {
+    target: "./src/mcp",
+    from: "./src/modules/*/actions.ts",
+    message:
+      "mcp não importa actions.ts de módulo. Use o service.ts do módulo.",
   },
   {
     target: [
@@ -88,6 +105,24 @@ export default defineConfig([
       ],
     },
   },
+  {
+    files: ["src/modules/**/*.{ts,tsx}"],
+    ignores: ["src/modules/*/actions.ts", "src/modules/*/components/**"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "next/navigation",
+              message:
+                "Dentro de um módulo, só actions.ts e components/ importam next/navigation. O MCP usa os mesmos serviços.",
+            },
+          ],
+        },
+      ],
+    },
+  },
   prettier,
   globalIgnores([
     ".next/**",
@@ -95,5 +130,7 @@ export default defineConfig([
     "build/**",
     "coverage/**",
     "next-env.d.ts",
+    "playwright-report/**",
+    "test-results/**",
   ]),
 ]);

@@ -20,15 +20,18 @@ beforeAll(async () => {
   });
 }, 60_000);
 
-async function restrictedImportMessages(code: string, filePath: string) {
+async function ruleMessages(ruleId: string, code: string, filePath: string) {
   const [result] = await eslint.lintText(code, { filePath });
   if (!result) {
     throw new Error(`O ESLint não analisou ${filePath}`);
   }
   return result.messages
-    .filter((message) => message.ruleId === RULE_ID)
+    .filter((message) => message.ruleId === ruleId)
     .map((message) => message.message);
 }
+
+const restrictedImportMessages = (code: string, filePath: string) =>
+  ruleMessages(RULE_ID, code, filePath);
 
 describe("regra de dependência app/mcp -> modules -> lib", () => {
   it("acusa import de app dentro de modules", async () => {
@@ -116,5 +119,96 @@ describe("client admin do Supabase só em service.ts de módulo", () => {
       "src/modules/clients/service.ts",
     );
     expect(messages).toHaveLength(0);
+  });
+});
+
+describe("src/proxy.ts é borda independente", () => {
+  // A regra ignora import que não resolve: estes casos dependem de
+  // src/modules/auth/repository.ts, service.ts, routes.ts e actions.ts
+  // existirem.
+  it("acusa import de repository.ts de módulo", async () => {
+    const messages = await restrictedImportMessages(
+      'import "@/modules/auth/repository";\n',
+      "src/proxy.ts",
+    );
+    expect(messages).toHaveLength(1);
+    expect(messages[0]).toContain("proxy");
+  });
+
+  it("acusa import de app", async () => {
+    const messages = await restrictedImportMessages(
+      'import "@/app/layout";\n',
+      "src/proxy.ts",
+    );
+    expect(messages).toHaveLength(1);
+    expect(messages[0]).toContain("proxy");
+  });
+
+  it("aceita import de service.ts de módulo e de lib", async () => {
+    const messages = await restrictedImportMessages(
+      'import "@/modules/auth/service";\nimport "@/lib/env";\n',
+      "src/proxy.ts",
+    );
+    expect(messages).toHaveLength(0);
+  });
+
+  it("aceita import de arquivo de módulo sem acesso a dados", async () => {
+    const messages = await restrictedImportMessages(
+      'import "@/modules/auth/routes";\n',
+      "src/proxy.ts",
+    );
+    expect(messages).toHaveLength(0);
+  });
+
+  it("ninguém importa o proxy", async () => {
+    for (const filePath of [
+      "src/modules/clients/service.ts",
+      "src/lib/example.ts",
+      "src/components/ui/example.tsx",
+      "src/styles/example.ts",
+    ]) {
+      const messages = await restrictedImportMessages(
+        'import "@/proxy";\n',
+        filePath,
+      );
+      expect(messages, filePath).toHaveLength(1);
+    }
+  });
+
+  it("acusa import de actions.ts de módulo dentro de mcp", async () => {
+    const messages = await restrictedImportMessages(
+      'import "@/modules/auth/actions";\n',
+      "src/mcp/example.ts",
+    );
+    expect(messages).toHaveLength(1);
+    expect(messages[0]).toContain("actions.ts");
+  });
+});
+
+describe("navegação do Next fora do domínio", () => {
+  const NAVIGATION_RULE_ID = "no-restricted-imports";
+  const code = 'import { redirect } from "next/navigation";\nvoid redirect;\n';
+
+  it("acusa next/navigation em service, repository e schemas de módulo", async () => {
+    for (const filePath of [
+      "src/modules/clients/service.ts",
+      "src/modules/clients/repository.ts",
+      "src/modules/clients/schemas.ts",
+    ]) {
+      const messages = await ruleMessages(NAVIGATION_RULE_ID, code, filePath);
+      expect(messages, filePath).toHaveLength(1);
+      expect(messages[0], filePath).toContain("next/navigation");
+    }
+  });
+
+  it("aceita next/navigation em actions.ts, components, app e proxy", async () => {
+    for (const filePath of [
+      "src/modules/clients/actions.ts",
+      "src/modules/clients/components/example.tsx",
+      "src/app/example.tsx",
+    ]) {
+      const messages = await ruleMessages(NAVIGATION_RULE_ID, code, filePath);
+      expect(messages, filePath).toHaveLength(0);
+    }
   });
 });

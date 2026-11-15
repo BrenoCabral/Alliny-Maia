@@ -41,3 +41,20 @@ Com o Docker aberto e a stack de pé (`npm run db:start`):
 - [ ] No Studio (http://localhost:54323), em Authentication, aparecem as três contas de teste do `docs/SETUP.md`
 - [ ] No Studio, a tabela `profiles` tem três linhas: uma `admin` e duas `client`
 - [ ] No Studio, criar um usuário novo em Authentication e ver a linha dele aparecer em `profiles` com papel `client`. Depois, `npm run db:reset` para limpar
+
+## T-006 Autenticação e rotas
+
+Com o Docker aberto, a stack de pé (`npm run db:start`), `npm run db:reset` e `npm run dev`:
+
+- [ ] Em `http://localhost:3000/entrar`, a admin de teste entra e cai em `/admin`. A cliente de teste entra e cai em `/cliente`
+- [ ] Com a cliente, abrir `/admin` leva a `/cliente`. Com a admin, abrir `/cliente` leva a `/admin`
+- [ ] Depois de "Sair", abrir `/admin` leva ao login
+- [ ] Senha errada e e-mail que não existe mostram a mesma mensagem
+- [ ] "Esqueci minha senha" com a cliente 2: o e-mail aparece em `http://127.0.0.1:54324`, em português, e o link leva até a troca da senha. Depois, `npm run db:reset`
+- [ ] As telas de acesso têm a cara da marca, no celular e no desktop
+
+No GitHub e no Netlify:
+
+- [ ] No pull request, a verificação `e2e` aparece e fica verde, junto com `check` e `db`
+- [ ] No Deploy Preview do Netlify, a landing abre normalmente e `/admin` leva a `/entrar`, que avisa que o acesso está indisponível
+- [ ] Depois do merge na `main`, `e2e` foi acrescentada às verificações obrigatórias
