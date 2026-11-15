@@ -132,9 +132,10 @@ mcp  ->  modules  ->  lib
 
 - `modules` nunca importa de `app` nem de `mcp`.
 - Um módulo só usa outro pelo `service.ts` dele, nunca pelo `repository.ts`.
-- `lib/supabase/admin.ts` (service role) só pode ser importado por `service.ts` e é marcado com `server-only`.
+- `lib/supabase/admin.ts` (service role) só pode ser importado por `service.ts` e é marcado com `server-only`. O lint libera um arquivo por vez: hoje só `src/modules/clients/service.ts` (convite). Outro uso entra na lista do lint de propósito, com a justificativa no `architecture.md` da task.
 - O `service.ts` escolhe e cria o client do Supabase (sessão da usuária ou admin) e passa para o `repository.ts`, que recebe o client como parâmetro e é o único que faz consultas.
 - `components/ui` e `styles` são folhas de apresentação: podem ser usados por `app` e pelos componentes dos módulos, e só importam de `lib`. `lib` não importa de nenhuma outra pasta de `src`.
+- `components/ui` guarda os componentes do shadcn/ui (ADR 0008), que são do painel. `app/(site)`, `app/(auth)` e `app/cliente` não importam dessa pasta.
 - `src/proxy.ts` é borda, como `app`: importa de `modules` (pelo `service.ts` e pelos arquivos sem acesso a dados) e de `lib`. Não importa `repository.ts`, `app` nem `mcp`.
 - Dentro de um módulo, só `actions.ts` e `components/` importam `next/navigation`. `service.ts`, `repository.ts`, `schemas.ts` e os demais arquivos não dependem da navegação do Next, porque o MCP usa os mesmos serviços. `mcp` não importa `actions.ts`.
 - A regra é imposta por lint (restrição de imports), não por convenção.
@@ -155,7 +156,7 @@ erDiagram
 | Tabela | Finalidade | Campos principais |
 | --- | --- | --- |
 | `profiles` | Um registro por usuário do Auth | `id` (igual a `auth.users.id`), `role` (`admin` ou `client`), `full_name` |
-| `clients` | Cadastro da cliente, independente de ela ter login | `profile_id` (nulo até o convite), `full_name`, `email`, `phone`, `status` |
+| `clients` | Cadastro da cliente, independente de ela ter login | `profile_id` (nulo até o convite), `full_name`, `email`, `phone`, `status` (`active` ou `archived`), `invited_at`, `access_activated_at` |
 | `client_intakes` | Ficha de atendimento preenchida pela consultora | `client_id`, `form_key`, `schema_version`, `answers` (jsonb) |
 | `client_notes` | Anotações datadas de cada atendimento | `client_id`, `noted_at`, `body` |
 | `assets` | Metadados de arquivos no Storage | `client_id`, `path`, `mime_type`, `width`, `height`, `alt` |
@@ -184,7 +185,7 @@ Todo perfil nasce com papel `client`, criado por gatilho quando o usuário é cr
 | Tabela | Admin | Cliente |
 | --- | --- | --- |
 | `profiles` | lê todos e edita o nome de todos (sem trocar `role`) | lê o próprio e edita o próprio nome (sem trocar `role`) |
-| `clients` | tudo | lê o próprio registro |
+| `clients` | lê, cria e edita todos. Não apaga: arquiva pelo `status` | lê o próprio registro, ativo ou arquivado |
 | `client_intakes`, `client_notes` | tudo | sem acesso |
 | `assets` | tudo | lê os do próprio cadastro que estejam em dossiê publicado |
 | `dossiers`, `dossier_sections` | tudo | lê apenas os próprios com `status = published` |
@@ -197,14 +198,30 @@ Defesa em profundidade, em três níveis:
 2. **Service** confere o papel antes de cada caso de uso (`requireAdmin`, `requireClient`).
 3. **Rotas** redirecionam por papel. Isso é experiência de uso, não segurança.
 
-A service role key ignora RLS. No formato atual de chaves do Supabase ela é a secret key (`sb_secret_...`, variável `SUPABASE_SECRET_KEY`), e a chave do navegador é a publishable key (`sb_publishable_...`). Uso permitido: operações administrativas do Auth (criar usuário, convidar). Qualquer outro uso exige justificativa no `architecture.md` da task.
+O vínculo entre login e cadastro é `clients.profile_id`. A função `private.current_client_id()` (security definer, mesmo molde de `private.is_admin()`) devolve o cadastro de quem consulta, ou nulo. As políticas das tabelas ligadas a uma cliente (dossiê, arquivos) usam `client_id = (select private.current_client_id())`.
+
+O vínculo é protegido no banco, por gatilho, e não só no serviço:
+
+- Um cadastro só se liga a uma conta de papel `client` cujo e-mail no Auth é o e-mail do cadastro.
+- Com conta ligada, o e-mail do cadastro não muda.
+- O vínculo só se desfaz quando a conta é apagada no Auth.
+- Um perfil ligado a um cadastro não vira admin.
+- `access_activated_at` é gravada só pelo banco, quando o Auth confirma o e-mail da conta. É o que separa "convite enviado" de "acesso ativo".
+
+O `status` do cadastro não entra em nenhuma decisão de acesso: a cliente arquivada continua entrando e lendo o que é dela.
+
+Colunas de uso interno da consultora não entram em `clients`. Admin e cliente usam o mesmo papel do banco (`authenticated`), então privilégio de coluna não separa as duas. O que a cliente não pode ler fica em tabela própria, sem política para ela, como `client_intakes` e `client_notes`.
+
+A service role key ignora RLS. No formato atual de chaves do Supabase ela é a secret key (`sb_secret_...`, variável `SUPABASE_SECRET_KEY`), e a chave do navegador é a publishable key (`sb_publishable_...`). Uso permitido: operações administrativas do Auth (convidar e apagar a conta de um convite que não foi aceito). Ela não lê nem grava tabela de domínio: o papel `service_role` não tem privilégio nelas. Qualquer outro uso exige justificativa no `architecture.md` da task.
 
 Cadastro público fica desligado. Contas de cliente só nascem por convite da consultora.
 
 ## 6. Autenticação e sessão
 
 - Login por e-mail e senha, com recuperação de senha por e-mail.
-- Convite: a consultora cadastra a cliente e dispara o convite. A cliente define a própria senha pelo link.
+- Convite: a consultora cadastra a cliente e dispara o convite. A cliente define a própria senha pelo link, que chega em `/confirmar-acesso` com `type=invite` e segue o mesmo caminho da recuperação de senha. O modelo do e-mail fica em `supabase/templates/invite.html`.
+- Enquanto o convite não foi aceito, a consultora reenvia (o link anterior deixa de valer) ou corrige o e-mail (a conta do endereço antigo é apagada no Auth). Aceito o convite, o e-mail do cadastro trava.
+- Os links de e-mail do Auth (convite e recuperação) valem 24 horas e são de uso único. A configuração do Auth é uma só para todos os tipos de link.
 - Sessão em cookie, renovada no servidor a cada requisição com `@supabase/ssr`. Server Components e Server Actions leem o usuário no servidor.
 - Rotas `/admin` e `/cliente` protegidas no interceptador de requisições do Next (`src/proxy.ts`, convenção `proxy` do Next 16, que substituiu `middleware`) e de novo no layout do servidor.
 - Telas de acesso: `/entrar`, `/recuperar-senha`, `/confirmar-acesso` (chegada do link de e-mail) e `/definir-senha`. Sair é uma server action, sem tela. Nenhuma delas é indexada.
@@ -317,7 +334,7 @@ Fluxo de trabalho:
 3. Merge em `main` publica o app no Netlify.
 4. Migrations vão para produção por um workflow manual do GitHub Actions com aprovação, nunca de uma máquina local.
 
-O CI é um workflow só, `.github/workflows/ci.yml`, sem segredo nenhum e com permissão só de leitura. Roda em pull request, em `main`, em branches de integração `release/**` e em branches `ci/**`. As `ci/**` são temporárias e servem para exercitar o próprio CI. Cada verificação é um job com nome fixo (`check`, `db` e `e2e`), e são esses nomes que a proteção da `main` exige. Os jobs `db` e `e2e` sobem com o CLI do projeto só os serviços do Supabase de que precisam. O `e2e` roda os testes de ponta a ponta contra o build de produção do app, com as chaves públicas da stack efêmera e sem a secret key. Detalhes em `docs/SETUP.md`.
+O CI é um workflow só, `.github/workflows/ci.yml`, sem segredo nenhum e com permissão só de leitura. Roda em pull request, em `main`, em branches de integração `release/**` e em branches `ci/**`. As `ci/**` são temporárias e servem para exercitar o próprio CI. Cada verificação é um job com nome fixo (`check`, `db` e `e2e`), e são esses nomes que a proteção da `main` exige. Os jobs `db` e `e2e` sobem com o CLI do projeto só os serviços do Supabase de que precisam. O `e2e` roda os testes de ponta a ponta contra o build de produção do app, com as chaves da stack efêmera, inclusive a secret key local, que o app usa no convite. As chaves saem do CLI em tempo de execução e não são segredo do GitHub. Os testes entram sempre pela tela e não usam chave nenhuma: o lint proíbe `tests/e2e/` de importar o Supabase. Detalhes em `docs/SETUP.md`.
 
 Deploy previews do Netlify não recebem as variáveis do Supabase de produção. Servem para revisar o site público. Fluxos autenticados são validados localmente.
 
