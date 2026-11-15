@@ -91,13 +91,17 @@ describe("regra de dependência app/mcp -> modules -> lib", () => {
   });
 });
 
-describe("client admin do Supabase só em service.ts de módulo", () => {
+describe("client admin do Supabase só em clients/service.ts e health/service.ts", () => {
   // A regra ignora import que não resolve: estes casos dependem de
   // src/lib/supabase/admin.ts existir.
   const code = 'import "@/lib/supabase/admin";\n';
 
-  it("acusa o import fora de service.ts", async () => {
+  it("acusa o import fora da lista fechada", async () => {
     for (const filePath of [
+      "src/modules/auth/service.ts",
+      "src/modules/intake/service.ts",
+      "src/modules/health/repository.ts",
+      "src/modules/health/service.test.ts",
       "src/app/example.tsx",
       "src/mcp/example.ts",
       "src/modules/clients/repository.ts",
@@ -125,12 +129,79 @@ describe("client admin do Supabase só em service.ts de módulo", () => {
     expect(messages).toHaveLength(0);
   });
 
-  it("aceita o import em service.ts de módulo", async () => {
-    const messages = await restrictedImportMessages(
-      code,
+  it("aceita o import no serviço de convite e no diagnóstico de desenvolvimento", async () => {
+    for (const filePath of [
       "src/modules/clients/service.ts",
-    );
-    expect(messages).toHaveLength(0);
+      "src/modules/health/service.ts",
+    ]) {
+      const messages = await restrictedImportMessages(code, filePath);
+      expect(messages, filePath).toHaveLength(0);
+    }
+  });
+});
+
+describe("shadcn/ui só no painel", () => {
+  // A regra ignora import que não resolve: estes casos dependem de
+  // src/components/ui/button.tsx existir.
+  const code = 'import "@/components/ui/button";\n';
+
+  it("acusa o import no site, nas telas de acesso e na área da cliente", async () => {
+    for (const filePath of [
+      "src/app/(auth)/example.tsx",
+      "src/app/(auth)/_components/example.tsx",
+      "src/app/(site)/example.tsx",
+      "src/app/cliente/example.tsx",
+    ]) {
+      const messages = await restrictedImportMessages(code, filePath);
+      expect(messages, filePath).toHaveLength(1);
+      expect(messages[0], filePath).toContain("components/ui é do painel");
+    }
+  });
+
+  it("aceita o import no painel e nos componentes de módulo", async () => {
+    for (const filePath of [
+      "src/modules/clients/components/example.tsx",
+      "src/app/admin/example.tsx",
+      "src/app/admin/clientes/example.tsx",
+    ]) {
+      const messages = await restrictedImportMessages(code, filePath);
+      expect(messages, filePath).toHaveLength(0);
+    }
+  });
+});
+
+describe("testes de ponta a ponta sem Supabase", () => {
+  const RESTRICTED_IMPORTS_RULE_ID = "no-restricted-imports";
+  const files = ["tests/e2e/example.spec.ts", "playwright.config.ts"];
+
+  it("acusa import de pacote do Supabase e do client do projeto", async () => {
+    for (const filePath of files) {
+      for (const code of [
+        'import { createClient } from "@supabase/supabase-js";\nvoid createClient;\n',
+        'import "@supabase/ssr";\n',
+        'import "@/lib/supabase/admin";\n',
+        'import "../../src/lib/supabase/server";\n',
+      ]) {
+        const messages = await ruleMessages(
+          RESTRICTED_IMPORTS_RULE_ID,
+          code,
+          filePath,
+        );
+        expect(messages, `${filePath}: ${code}`).toHaveLength(1);
+        expect(messages[0], filePath).toContain("entram pela tela");
+      }
+    }
+  });
+
+  it("aceita import do Playwright", async () => {
+    for (const filePath of files) {
+      const messages = await ruleMessages(
+        RESTRICTED_IMPORTS_RULE_ID,
+        'import { test } from "@playwright/test";\nvoid test;\n',
+        filePath,
+      );
+      expect(messages, filePath).toHaveLength(0);
+    }
   });
 });
 

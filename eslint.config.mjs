@@ -81,12 +81,20 @@ const layerZones = [
       // O teste do próprio arquivo é a única exceção em lib.
       "./src/lib/supabase/!(admin.test).{ts,tsx}",
       "./src/lib/supabase/*/**/*",
-      "./src/modules/*/!(service).{ts,tsx}",
+      // Lista fechada: o serviço de convite e o diagnóstico de desenvolvimento.
+      "./src/modules/!(clients|health)/**/*",
+      "./src/modules/@(clients|health)/!(service).{ts,tsx}",
       "./src/modules/*/*/**/*",
     ],
     from: "./src/lib/supabase/admin.ts",
     message:
-      "O client admin do Supabase (secret key) só pode ser importado por src/modules/*/service.ts.",
+      "O client admin do Supabase (secret key) só pode ser importado por src/modules/clients/service.ts (convite) e src/modules/health/service.ts (diagnóstico de desenvolvimento).",
+  },
+  {
+    target: ["./src/app/(site)", "./src/app/(auth)", "./src/app/cliente"],
+    from: "./src/components/ui",
+    message:
+      "components/ui é do painel (ADR 0008). Site, telas de acesso e área da cliente usam componentes próprios.",
   },
 ];
 
@@ -122,6 +130,23 @@ export default defineConfig([
               name: "next/navigation",
               message:
                 "Dentro de um módulo, só actions.ts e components/ importam next/navigation. O MCP usa os mesmos serviços.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ["tests/e2e/**/*.ts", "playwright.config.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@supabase/*", "@/lib/supabase/*", "**/lib/supabase/*"],
+              message:
+                "Os testes de ponta a ponta entram pela tela. Nada de client do Supabase nem de chave.",
             },
           ],
         },
