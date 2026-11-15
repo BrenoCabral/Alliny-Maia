@@ -3,6 +3,7 @@ import "server-only";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 
 import { getSupabasePublicEnv } from "@/lib/env";
 import type { Database } from "@/lib/supabase/database.types";
@@ -46,6 +47,10 @@ export function createSupabaseClientForCookies(
 export async function createSupabaseServerClient(): Promise<
   SupabaseClient<Database>
 > {
+  // O client do Auth lê o relógio (Date.now) para conferir a validade da
+  // sessão. Com Cache Components isso só pode acontecer no momento da
+  // requisição: connection() tira a leitura dos estágios de pré-renderização.
+  await connection();
   const cookieStore = await cookies();
 
   return createSupabaseClientForCookies({
