@@ -2651,8 +2651,50 @@ Nenhuma bloqueia a execução. Cada uma foi resolvida no plano com a leitura mai
 
 Preenchido pelo `dev-implementer` ao terminar. Não registre valores de chave, tokens, `token_hash` nem links de recuperação.
 
+**Estado em 2026-11-15: task NÃO concluída. Execução parada no passo 25 (prova 2 do CI), por regra de "Quando parar". O `BACKLOG.md` não foi marcado. Os passos 26 (parcial) e 27 não foram concluídos.**
+
 ### O que foi feito
+
+Passos 1 a 24 executados e commitados, um commit por passo, na ordem do plano.
+
+- **Passo 3, linha de base:** `db:test` com Files=2, Tests=54, PASS. `npm run check` com 89 testes do Vitest.
+- **Passo 5, sonda, quatro execuções em 12 segundos, todas com saída 0 e o mesmo resultado:** 0. busca do Mailpit HTTP 200. 1. `resetPasswordForEmail` ok nas quatro (o limite `email_sent = 2` não vale para a caixa local). 2. mensagem HTTP 200, assunto "Redefinir a senha · Alliny Maia". 3. link para `http://localhost:3000/confirmar-acesso`, `type=recovery`, `token_hash` presente, sem apontar para o verify do Auth. 4. `verifyOtp` com `token_hash` em client sem cookies: ok, sessão criada. 5 e 6. `AuthWeakPasswordError`, `code=weak_password`, status 422. 7. token reutilizado: `AuthApiError`, `code=otp_expired`, status 403. Campos do Mailpit como no plano (`messages`, `ID`, `Subject`, `HTML`).
+- **Vermelho do TDD (passos 6 a 14):** env `isSupabaseConfigured is not a function` (5 casos). schemas `Cannot read properties of undefined (reading 'safeParse')` (29 casos). routes `Cannot find module './routes'`. repository `signInWithPassword is not a function` e afins (67 casos). service `signIn is not a function` e afins (67 casos). actions `Cannot find module .../actions`. lint: 5 casos novos falhando. proxy `Cannot find module '/src/proxy'`. guards `Cannot find module .../guards`. Passo 15: `visitante sem sessão vai para o login` falhou em `getByRole('heading', { name: 'Entrar', level: 1 })`, elemento não encontrado.
+- **Passo 13:** `next/server` e `next/experimental/testing/server` carregam no Vitest. O build lista `ƒ Proxy (Middleware)` e passa com o proxy importando o service.
+- **Passo 15:** `@playwright/test` 1.65.1 (a mais nova estável na hora). `package-lock.json` só acrescentou `@playwright/test`, `playwright` e `playwright-core`.
+- **Passo 18, com `db:reset` antes:** rodada 1 com 11 testes passando, 59 s no total (Playwright 15,4 s), `db:test` PASS sem reset. Rodada 2 com 11 passando, 22 s (15,1 s), `db:test` PASS. Buscas estáticas sem ocorrência (as únicas linhas de `next/navigation` em `src/modules` são o `vi.mock` do `actions.test.ts` e o `README.md`).
+- **Passo 19, sem variáveis:** `build exit 0`. `/` 200. `/admin`, `/cliente` e `/admin/qualquer` 307 para `/entrar?next=...`. `/entrar`, `/recuperar-senha` e `/confirmar-acesso` 200. `/definir-senha` 307 para `/entrar`. `/api/dev/health` 404. Landing com conteúdo 1, aviso de indisponível 1, campo de senha 0, `x-robots-tag` em `/admin` 1 e em `/` 0. `.env.local` restaurado e conferido.
+- **Passo 23:** `npm run check` saída 0 com 407 testes do Vitest em 13 arquivos. `db:reset` 0. `db:test` 54 testes PASS antes e depois do `test:e2e`, sem reset no meio. `test:e2e` com 11 passando (14,9 s de Playwright, 21 s no total). Conferência de segredos com duas linhas `ok:` e nenhuma `VAZOU:`. 18 commits, todos com `(T-006)` e o rodapé. Lista de arquivos dentro da prevista.
+- **Passo 24, prova 1, `ci/T-006-verde`:** execução 43673113171, `head_sha` d348083, `success`, 177 s no total. `check` 95 s, `db` 121 s, `e2e` 173 s (Instalar dependências 57 s, Instalar navegador 20 s, Subir o Supabase 59 s, Gerar variáveis de ambiente 1 s, Testes de ponta a ponta 27 s). Dentro do orçamento de 10 minutos. Nenhuma contingência usada. O commit não recebeu status do Netlify: conferência oportunista não feita.
+- **Passo 25, prova 2, `ci/T-006-prova-e2e`:** execução 43673444187, `head_sha` bcd90bd. **Resultado inesperado: `success` nos três jobs** (`e2e` 179 s, `db` 98 s, `check` 76 s). Ver "Pendências".
+- **Passo 26:** as duas branches `ci/T-006-*` foram apagadas do remoto e a local de prova também. `git ls-remote --heads origin "ci/*"` sem saída. `origin/release/T-004-T-005` continua em 8cbb08a.
 
 ### Desvios do plano
 
+Os dez desvios da lista "Desvios deste plano em relação ao `architecture.md`" valem como estão. Da execução:
+
+1. **`connection()` em `src/lib/supabase/server.ts`.** Com o plano ao pé da letra, o `next start` registrava `Route "/admin": Next.js encountered the unstable value Date.now() while prerendering` a cada renderização de `/admin` e `/cliente` com sessão: o client do Auth lê o relógio em segundo plano. Os testes passavam, mas o log de produção ficaria com erro. Correção pela documentação instalada (`01-getting-started/08-caching.md` e `04-functions/connection.md`): `await connection()` antes de `cookies()` em `createSupabaseServerClient`. Assinatura e comportamento mantidos. Entrou no commit do passo 16.
+2. **Passo 7 em dois commits.** A gravação de `schemas.ts` falhou e o commit saiu só com o teste (4cfd138). A implementação entrou no commit seguinte (6e43901). Sem `reset` nem `amend`.
+3. **Casos de teste a mais, nenhum a menos.** `routes.test.ts` (`/admin/../cliente`), `repository.test.ts` (500 no link, recusa esperada sem log), `service.test.ts`, `actions.test.ts` (formulário sem campos) e `tests/lint` ("ninguém importa o proxy", que entrou no commit do passo 13 porque depende de `src/proxy.ts` existir).
+4. **`weak_password` em `setNewPasswordAction`** devolve a mensagem da política como erro do campo `password`, igual à validação do formulário.
+5. **Peças a mais em `src/app/(auth)/_components/`:** `page-heading.tsx` e `text-link.tsx`, para não repetir classes nas quatro telas.
+6. **Nas telas de acesso, a conferência de ambiente fica fora do `<Suspense>`** (na page), para o aviso de indisponível sair no HTML estático.
+7. **Script do passo 19 rodado com `MSYS2_ARG_CONV_EXCL="*"`,** porque o Git Bash convertia os caminhos passados ao `curl -w`. Conteúdo do script sem mudança.
+8. **Conferência a mais:** `next dev` responde 200 nas telas de acesso e 307 em `/admin` e `/definir-senha`, e capturas de tela de `/entrar` e `/confirmar-acesso` conferidas no celular e no desktop.
+
 ### Pendências
+
+**Bloqueio, devolvido ao `dev-planner` (erro do plano):**
+
+- **A prova 2 ficou verde.** O passo 25 troca o `h1` de `/admin` de "Painel" para "Painel de prova" e espera o `e2e` vermelho. Os testes procuram o título com `getByRole("heading", { level: 1, name })`, e o Playwright casa o nome por trecho, sem diferenciar maiúsculas, quando não há `exact: true`. "Painel de prova" continua casando com "Painel". Conferido no commit de prova (a troca está lá) e nos tipos do Playwright 1.65.1 instalado.
+- São dois problemas: a quebra escolhida para a prova é invisível aos testes, e os testes não fixam os títulos que o `architecture.md` chama de contrato (seção 6.1). Qualquer título que contenha o texto esperado passa.
+- Sugestão, para decisão do `dev-planner`: `exact: true` nas seis buscas por título (`tests/e2e/support/app.ts`, `acesso.spec.ts` e `recuperacao.spec.ts`), que é reforço de teste e não muda contrato, e repetir as provas 1 e 2. Não foi aplicado: o plano manda parar neste caso.
+- Não verificado por causa da parada: que um cenário quebrado deixa o `e2e` vermelho no passo "Testes de ponta a ponta", com a anotação do reporter `github` e o "Resumo da falha", sem derrubar `check` e `db` (item 11 da verificação final e parte do critério 10).
+
+**Ainda por fazer depois do desbloqueio:** repetir os passos 24 e 25 no commit novo, concluir o registro, marcar o `BACKLOG.md` e entregar o pull request (passo 27).
+
+**Para o Breno, além da lista "Pendências para o Breno já conhecidas":**
+
+- O `@playwright/test` 1.65.1 tinha um dia de publicado quando foi instalado. É a versão fixada pelo `architecture.md`.
+- O commit da `ci/T-006-verde` não recebeu status do Netlify. A conferência do proxy no Netlify continua sendo o item 3 da lista.
+- A stack local do Supabase ficou de pé, com o `config.toml` desta branch, para a continuação da task.
