@@ -39,10 +39,16 @@ export async function waitForNewMessage(
   return null;
 }
 
-export function recoveryLinkFrom(html: string): URL {
+// Link de confirmação de qualquer tipo (recuperação ou convite): todos chegam
+// em /confirmar-acesso.
+export function confirmationLinkFrom(html: string): URL {
   const match = html.match(/href="([^"]*\/confirmar-acesso\?[^"]*)"/);
   if (!match?.[1]) {
     throw new Error("O e-mail não tem link para /confirmar-acesso.");
   }
   return new URL(match[1].replaceAll("&amp;", "&"));
+}
+
+export function recoveryLinkFrom(html: string): URL {
+  return confirmationLinkFrom(html);
 }
