@@ -132,7 +132,7 @@ mcp  ->  modules  ->  lib
 
 - `modules` nunca importa de `app` nem de `mcp`.
 - Um módulo só usa outro pelo `service.ts` dele, nunca pelo `repository.ts`.
-- `lib/supabase/admin.ts` (service role) só pode ser importado por `service.ts` e é marcado com `server-only`. O lint libera um arquivo por vez: hoje só `src/modules/clients/service.ts` (convite). Outro uso entra na lista do lint de propósito, com a justificativa no `architecture.md` da task.
+- `lib/supabase/admin.ts` (service role) só pode ser importado por `service.ts` e é marcado com `server-only`. O lint libera uma lista fechada de arquivos: hoje `src/modules/clients/service.ts` (convite) e `src/modules/health/service.ts` (diagnóstico de desenvolvimento, que não roda em produção). Outro uso entra na lista do lint de propósito, com a justificativa no `architecture.md` da task.
 - O `service.ts` escolhe e cria o client do Supabase (sessão da usuária ou admin) e passa para o `repository.ts`, que recebe o client como parâmetro e é o único que faz consultas.
 - `components/ui` e `styles` são folhas de apresentação: podem ser usados por `app` e pelos componentes dos módulos, e só importam de `lib`. `lib` não importa de nenhuma outra pasta de `src`.
 - `components/ui` guarda os componentes do shadcn/ui (ADR 0008), que são do painel. `app/(site)`, `app/(auth)` e `app/cliente` não importam dessa pasta.
@@ -212,7 +212,7 @@ O `status` do cadastro não entra em nenhuma decisão de acesso: a cliente arqui
 
 Colunas de uso interno da consultora não entram em `clients`. Admin e cliente usam o mesmo papel do banco (`authenticated`), então privilégio de coluna não separa as duas. O que a cliente não pode ler fica em tabela própria, sem política para ela, como `client_intakes` e `client_notes`.
 
-A service role key ignora RLS. No formato atual de chaves do Supabase ela é a secret key (`sb_secret_...`, variável `SUPABASE_SECRET_KEY`), e a chave do navegador é a publishable key (`sb_publishable_...`). Uso permitido: operações administrativas do Auth (convidar e apagar a conta de um convite que não foi aceito). Ela não lê nem grava tabela de domínio: o papel `service_role` não tem privilégio nelas. Qualquer outro uso exige justificativa no `architecture.md` da task.
+A service role key ignora RLS. No formato atual de chaves do Supabase ela é a secret key (`sb_secret_...`, variável `SUPABASE_SECRET_KEY`), e a chave do navegador é a publishable key (`sb_publishable_...`). Uso permitido: operações administrativas do Auth. No produto são duas: convidar e apagar a conta de um convite que não foi aceito. Fora do produto, o diagnóstico de desenvolvimento (`/api/dev/health`) lista um usuário só para fazer o banco responder, e não roda em produção. Ela não lê nem grava tabela de domínio: o papel `service_role` não tem privilégio nelas. Qualquer outro uso exige justificativa no `architecture.md` da task.
 
 Cadastro público fica desligado. Contas de cliente só nascem por convite da consultora.
 

@@ -10,7 +10,7 @@
 
 A tabela `clients` guarda o cadastro (nome, e-mail, telefone, status) e o vínculo opcional com o login (`profile_id`). A consultora lista, busca, cria, edita, arquiva e reativa pelo painel, em `/admin/clientes`. Tudo isso roda com a sessão dela, e a RLS decide: admin lê e altera tudo, cliente lê só o próprio cadastro.
 
-O convite usa a API administrativa do Auth (`inviteUserByEmail`), que exige a secret key. É o único uso da service role no sistema, e fica restrito a duas chamadas ao Auth: convidar e apagar a conta de um convite que não foi aceito. A service role não lê nem grava `clients`. O vínculo (`profile_id`) é gravado com a sessão da admin e protegido por gatilho no banco: só aceita a conta de papel `client` cujo e-mail no Auth é o e-mail do cadastro.
+O convite usa a API administrativa do Auth (`inviteUserByEmail`), que exige a secret key. É o único uso da service role no produto, e fica restrito a duas chamadas ao Auth: convidar e apagar a conta de um convite que não foi aceito. Fora do produto existe um uso anterior, que esta task não muda: o diagnóstico de desenvolvimento da T-002 (seção 4.3). A service role não lê nem grava `clients`. O vínculo (`profile_id`) é gravado com a sessão da admin e protegido por gatilho no banco: só aceita a conta de papel `client` cujo e-mail no Auth é o e-mail do cadastro.
 
 O estado do acesso tem três valores, derivados de duas colunas: sem `profile_id` é "sem convite", com `profile_id` e sem `access_activated_at` é "convite enviado", com `access_activated_at` é "acesso ativo". Quem grava `access_activated_at` é o banco, por um gatilho em `auth.users` que dispara quando o Auth confirma o e-mail da conta. É o mesmo ponto em que o Auth deixa de aceitar reenvio de convite, então painel e Auth nunca discordam.
 
@@ -53,7 +53,7 @@ Só se confirma na execução (cada item reaparece na seção 10):
 | `supabase/templates/invite.html` | Modelo do e-mail de convite. Seção 3.6 |
 | `src/modules/clients/schemas.ts` | Tipos, schemas zod, estado do acesso, mensagens. Seção 5.1 |
 | `src/modules/clients/repository.ts` | Consultas a `clients` e as duas chamadas administrativas ao Auth. Seção 5.2 |
-| `src/modules/clients/service.ts` | Casos de uso. Único arquivo do projeto que importa `src/lib/supabase/admin.ts`. Seção 5.3 |
+| `src/modules/clients/service.ts` | Casos de uso. Único arquivo de produto que importa `src/lib/supabase/admin.ts` (o outro é o diagnóstico de desenvolvimento, seção 4.3). Seção 5.3 |
 | `src/modules/clients/actions.ts` | Server actions. Seção 5.4 |
 | `src/modules/clients/components/` | Formulário, lista, selos de status e de acesso, botões de arquivar e de convidar, abas |
 | `src/modules/clients/*.test.ts` | Testes unitários. Seção 8.1 |
@@ -260,7 +260,10 @@ Admin e cliente usam o mesmo papel do banco (`authenticated`), então privilégi
 ### 4.3 Service role
 
 - **Onde mora:** `SUPABASE_SECRET_KEY`, só no servidor, lida em um arquivo só (`src/lib/supabase/admin.ts`, com `server-only`). Local: `.env.local`. CI: gerada pela stack efêmera (seção 9.2). Produção: variável do Netlify, só no contexto de produção (T-008).
-- **Quem usa:** só `src/modules/clients/service.ts` cria o client admin, e só o passa a duas funções do `repository.ts`: convidar e apagar conta de convite pendente. O lint passa a liberar o import de `admin.ts` para esse arquivo e nenhum outro (seção 5.7).
+- **Quem usa, no produto:** só `src/modules/clients/service.ts` cria o client admin, e só o passa a duas funções do `repository.ts`: convidar e apagar conta de convite pendente.
+- **Uso anterior, fora do produto (T-002):** `src/modules/health/service.ts` cria o client admin para o diagnóstico `GET /api/dev/health`, e `src/modules/health/repository.ts` chama `auth.admin.listUsers({ page: 1, perPage: 1 })` só para fazer o banco responder, descartando o resultado. É operação administrativa do Auth, com a justificativa registrada em `tasks/T-002-supabase-local/architecture.md` (seção de autorização). Não roda em produção: a rota responde 404 e `checkHealth` lança com `NODE_ENV=production`. Esta task não muda o módulo `health`. A primeira versão deste documento dizia que ninguém usava o client admin, e estava errada.
+- **Lint:** o import de `admin.ts` passa a ser liberado por lista fechada de arquivos, hoje dois: `src/modules/clients/service.ts` e `src/modules/health/service.ts`. Antes valia para o `service.ts` de qualquer módulo (seção 5.7).
+- **Leitura do critério "O uso da service role fica restrito ao serviço de convite":** no que roda em produção, a secret key só é usada pelo serviço de convite. A exceção é o diagnóstico de desenvolvimento da T-002, que já existia, não roda em produção e não lê nem grava dado de cliente. Nenhum uso novo nasce nesta task além do convite.
 - **O que não usa:** listar, criar, editar, arquivar, reativar, gravar o vínculo e gravar `invited_at` rodam com a sessão da admin.
 - **Justificativa:** convidar e apagar usuário são operações administrativas do Auth, que não existem para token de usuária. É o uso que a ADR 0002 e `docs/ARCHITECTURE.md` já permitem. Não há outro.
 - **Navegador:** a variável não tem prefixo `NEXT_PUBLIC_`, `admin.ts` é `server-only`, e o CI confere que `sb_secret_` não aparece em `.next/static` (seção 9.2).
@@ -363,7 +366,7 @@ export type WriteResult<T> = { ok: true; row: T } | { ok: false; failure: WriteF
 - `linkInvitedProfile` grava `profile_id` e `invited_at = now` só se `profile_id` ainda é nulo. `touchInvitedAt` só grava `invited_at`.
 - Tradução de erro: violação de `clients_email_key` vira `email_taken`. Exceção `clients_email_locked` vira `email_locked`. Exceções `clients_profile_*` e violação de `clients_profile_id_key` viram `not_linkable`. Violação das constraints de formato vira `invalid`. Update que não acha linha vira `not_found`. Qualquer outro erro de banco sobe como erro comum, como no módulo `auth`.
 
-Com o client admin, as duas únicas chamadas `auth.admin.*` do projeto:
+Com o client admin, as duas únicas chamadas `auth.admin.*` do produto (a terceira do projeto é o `listUsers` do diagnóstico de desenvolvimento, em `health/repository.ts`):
 
 ```ts
 export type InviteFailure = "email_in_use" | "invalid_email" | "rate_limited" | "unavailable" | "other"
@@ -486,13 +489,21 @@ export function createSupabaseAdminClient(): SupabaseClient<Database>   // sem m
 
 | Regra | Efeito |
 | --- | --- |
-| A zona do client admin passa a liberar só `src/modules/clients/service.ts` | "O uso da service role fica restrito ao serviço de convite" vira regra de lint. `service.ts` de outro módulo importando `admin.ts` é erro |
+| A zona do client admin passa a liberar uma lista fechada: `src/modules/clients/service.ts` (convite) e `src/modules/health/service.ts` (diagnóstico de desenvolvimento da T-002) | "O uso da service role fica restrito ao serviço de convite" vira regra de lint, com a exceção de desenvolvimento nomeada. Qualquer outro arquivo de `src/` importando `admin.ts` é erro, inclusive o `service.ts` de outro módulo |
 | Zona com alvo `src/app/(site)`, `src/app/(auth)` e `src/app/cliente`, origem `src/components/ui` | O shadcn fica no painel (ADR 0008) |
 | Bloco para `tests/e2e/**` e `playwright.config.ts`: proibido importar `@supabase/*` e `@/lib/supabase/*` | Os testes não têm atalho por chave. Substitui a prova da T-006, que era o job não ter a secret key |
 
-Casos novos em `tests/lint/dependency-rule.test.ts`: `auth/service.ts` importando `admin.ts` é acusado, `clients/service.ts` é aceito, `clients/repository.ts` é acusado, uma tela de `(auth)` importando `components/ui` é acusada, um componente de `modules/clients/components` importando `components/ui` é aceito, um arquivo de `tests/e2e` importando `@supabase/supabase-js` é acusado.
+Casos novos em `tests/lint/dependency-rule.test.ts`: `auth/service.ts` importando `admin.ts` é acusado, `clients/service.ts` é aceito, `health/service.ts` continua aceito, `clients/repository.ts` e `health/repository.ts` são acusados, uma tela de `(auth)` importando `components/ui` é acusada, um componente de `modules/clients/components` importando `components/ui` é aceito, um arquivo de `tests/e2e` importando `@supabase/supabase-js` é acusado.
 
 A verificação por busca da T-006 continua valendo: nenhuma ocorrência de `.auth.` em `src/` fora de `src/modules/*/repository.ts` e dos testes deles.
+
+Buscas estáticas desta task, em `src/`, sem contar arquivos `*.test.ts` (que simulam o client admin com `vi.mock`), com o resultado esperado:
+
+| Busca | Resultado esperado |
+| --- | --- |
+| Arquivos com `import` de `@/lib/supabase/admin` | Exatamente 2: `src/modules/clients/service.ts` e `src/modules/health/service.ts` |
+| Ocorrências de `.auth.admin.` | Exatamente 3, em 2 arquivos: `inviteUserByEmail` e `deleteUser` em `src/modules/clients/repository.ts`, `listUsers` em `src/modules/health/repository.ts` |
+| Ocorrências de `SUPABASE_SECRET_KEY` | Só em `src/lib/supabase/admin.ts` |
 
 ## 6. Telas
 
@@ -793,7 +804,7 @@ Como o `dev-implementer` prova o CI: como na T-006, com uma branch `ci/T-007-ver
 
 ### 9.4 Texto sugerido para o `CLAUDE.md`
 
-Vai na descrição do pull request, para o Breno aplicar. Em "Estado atual": o painel tem o cadastro de clientes e o convite desde a T-007, o shadcn/ui e o react-hook-form estão instalados e são só do painel, e a secret key do Supabase é usada só em `src/modules/clients/service.ts`.
+Vai na descrição do pull request, para o Breno aplicar. Em "Estado atual": o painel tem o cadastro de clientes e o convite desde a T-007, o shadcn/ui e o react-hook-form estão instalados e são só do painel, e a secret key do Supabase é usada no produto só em `src/modules/clients/service.ts` (o diagnóstico de desenvolvimento em `src/modules/health/` continua usando).
 
 ## 10. Riscos e alternativas descartadas
 
@@ -845,11 +856,11 @@ Vai na descrição do pull request, para o Breno aplicar. Em "Estado atual": o p
 
 ## 11. Ajustes em `docs/ARCHITECTURE.md`
 
-Nenhuma decisão registrada é contrariada nem ampliada. A ADR 0002 restringe a service role a operações administrativas do Auth, e o desenho usa a chave só para convidar e para apagar a conta de um convite pendente. A ADR 0008 já mandava instalar o shadcn/ui na primeira tela do painel. A ADR 0005 já previa testes de ponta a ponta no CI com Supabase efêmero. Por isso não há ADR.
+Nenhuma decisão registrada é contrariada nem ampliada. A ADR 0002 restringe a service role a operações administrativas do Auth, e o desenho usa a chave só para convidar e para apagar a conta de um convite pendente. O diagnóstico de desenvolvimento da T-002 (`auth.admin.listUsers`) também é operação administrativa do Auth e continua como está. A ADR 0008 já mandava instalar o shadcn/ui na primeira tela do painel. A ADR 0005 já previa testes de ponta a ponta no CI com Supabase efêmero. Por isso não há ADR.
 
 Ajustes de texto já escritos no arquivo, não commitados:
 
-1. **Seção 3, regra de dependência.** O lint libera o client admin para um arquivo por vez, hoje `src/modules/clients/service.ts`. `components/ui` guarda o shadcn/ui, e `(site)`, `(auth)` e `cliente` não importam dali.
+1. **Seção 3, regra de dependência.** O lint libera o client admin por lista fechada de arquivos, hoje `src/modules/clients/service.ts` (convite) e `src/modules/health/service.ts` (diagnóstico de desenvolvimento). `components/ui` guarda o shadcn/ui, e `(site)`, `(auth)` e `cliente` não importam dali.
 2. **Seção 4.** A linha de `clients` ganha os valores de `status` e as colunas `invited_at` e `access_activated_at`.
 3. **Seção 5.** A linha de `clients` na tabela de papéis deixa de dizer "tudo" (não existe exclusão) e passa a dizer que a cliente lê o próprio registro, ativo ou arquivado. Parágrafos novos: `private.current_client_id()` como padrão das próximas políticas, as regras do vínculo garantidas por gatilho, o `status` fora das decisões de acesso, e a regra de que coluna de uso interno não entra em `clients`. A frase da service role passa a citar convidar e apagar conta de convite pendente, e a dizer que o papel `service_role` não tem privilégio em tabela de domínio.
 4. **Seção 6.** O item do convite descreve `type=invite`, o modelo próprio, o reenvio, a correção de e-mail e o travamento. Item novo: os links valem 24 horas e a configuração é única.
