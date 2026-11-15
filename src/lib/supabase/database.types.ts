@@ -9,6 +9,57 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      clients: {
+        Row: {
+          access_activated_at: string | null;
+          created_at: string;
+          email: string | null;
+          full_name: string;
+          id: string;
+          invited_at: string | null;
+          phone: string | null;
+          profile_id: string | null;
+          search_text: string | null;
+          status: Database["public"]["Enums"]["client_status"];
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          access_activated_at?: string | null;
+          created_at?: string;
+          email?: string | null;
+          full_name: string;
+          id?: string;
+          invited_at?: string | null;
+          phone?: string | null;
+          profile_id?: string | null;
+          search_text?: never;
+          status?: Database["public"]["Enums"]["client_status"];
+          updated_at?: string;
+        };
+        Update: {
+          access_activated_at?: string | null;
+          created_at?: string;
+          email?: string | null;
+          full_name?: string;
+          id?: string;
+          invited_at?: string | null;
+          phone?: string | null;
+          profile_id?: string | null;
+          search_text?: never;
+          status?: Database["public"]["Enums"]["client_status"];
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "clients_profile_id_fkey";
+            columns: ["profile_id"];
+            isOneToOne: true;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       profiles: {
         Row: {
           created_at: string;
@@ -43,6 +94,7 @@ export type Database = {
     };
     Enums: {
       app_role: "admin" | "client";
+      client_status: "active" | "archived";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -171,6 +223,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "client"],
+      client_status: ["active", "archived"],
     },
   },
 } as const;

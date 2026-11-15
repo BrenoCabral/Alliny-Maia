@@ -83,3 +83,28 @@ where u.id in (
 update public.profiles
 set role = 'admin'
 where id = '00000000-0000-4000-a000-000000000001';
+
+-- Cadastros de clientes (T-007). Dados inventados, no domínio .test. Os dois
+-- primeiros ficam ligados aos logins de teste: o gatilho clients_guard confere
+-- o e-mail e marca o acesso como ativo. A cliente 2 nasce arquivada de
+-- propósito: arquivar não tira o acesso.
+insert into public.clients (id, full_name, email, phone, status, profile_id)
+values
+  (
+    '00000000-0000-4000-b000-000000000001', 'Cliente Um de Teste',
+    'cliente1@allinymaia.test', '(00) 90000-0001', 'active',
+    '00000000-0000-4000-a000-000000000002'
+  ),
+  (
+    '00000000-0000-4000-b000-000000000002', 'Cliente Dois de Teste',
+    'cliente2@allinymaia.test', '(00) 90000-0002', 'archived',
+    '00000000-0000-4000-a000-000000000003'
+  ),
+  (
+    '00000000-0000-4000-b000-000000000003', 'Cliente Convite de Teste',
+    'convite@allinymaia.test', '(00) 90000-0003', 'active', null
+  ),
+  (
+    '00000000-0000-4000-b000-000000000004', 'Cliente Sem E-mail de Teste',
+    null, null, 'active', null
+  );
