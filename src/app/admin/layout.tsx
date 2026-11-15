@@ -30,12 +30,18 @@ async function AdminShell({ children }: { children: ReactNode }) {
             {site.name}
             <span className="ml-2 font-normal text-neutral-500">Painel</span>
           </p>
-          <nav aria-label="Painel">
+          <nav aria-label="Painel" className="flex gap-4">
             <Link
               href="/admin"
               className="underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-900"
             >
               Início
+            </Link>
+            <Link
+              href="/admin/clientes"
+              className="underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-900"
+            >
+              Clientes
             </Link>
           </nav>
           <p className="ml-auto text-neutral-600">
