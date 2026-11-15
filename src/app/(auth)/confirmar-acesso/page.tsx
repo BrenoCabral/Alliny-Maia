@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 
 import { isSupabaseConfigured } from "@/lib/env";
-import { PASSWORD_RECOVERY_PATH } from "@/modules/auth/routes";
+import { LOGIN_PATH, PASSWORD_RECOVERY_PATH } from "@/modules/auth/routes";
 import { authMessages } from "@/modules/auth/schemas";
 
 import { EmailLinkForm } from "../_components/email-link-form";
@@ -20,8 +20,21 @@ async function EmailLinkSection({
   searchParams: PageProps<"/confirmar-acesso">["searchParams"];
 }) {
   const { token_hash: tokenHash, type } = await searchParams;
+  const isInvite = type === "invite";
 
   if (typeof tokenHash !== "string" || typeof type !== "string") {
+    // Convite sem token: quem resolve é a Alliny, reenviando. Não há novo
+    // link para a pessoa pedir.
+    if (isInvite) {
+      return (
+        <div className="flex flex-col gap-6">
+          <FormMessage kind="error">{authMessages.invalidInvite}</FormMessage>
+          <p>
+            <TextLink href={LOGIN_PATH}>Ir para o login</TextLink>
+          </p>
+        </div>
+      );
+    }
     return (
       <div className="flex flex-col gap-6">
         <FormMessage kind="error">{authMessages.invalidLink}</FormMessage>
@@ -35,7 +48,9 @@ async function EmailLinkSection({
   return (
     <>
       <p className="mb-8 text-[15px] leading-relaxed text-brand-muted">
-        Toque em continuar para definir a sua senha.
+        {isInvite
+          ? authMessages.inviteIntro
+          : "Toque em continuar para definir a sua senha."}
       </p>
       <EmailLinkForm tokenHash={tokenHash} type={type} />
     </>

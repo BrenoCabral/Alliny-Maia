@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 
 import { confirmEmailLinkAction, type FormState } from "@/modules/auth/actions";
-import { PASSWORD_RECOVERY_PATH } from "@/modules/auth/routes";
+import { LOGIN_PATH, PASSWORD_RECOVERY_PATH } from "@/modules/auth/routes";
 
 import { FormMessage } from "./form-message";
 import { SubmitButton } from "./submit-button";
@@ -37,7 +37,11 @@ export function EmailLinkForm({
       <SubmitButton>Continuar</SubmitButton>
       {failed ? (
         <p>
-          <TextLink href={PASSWORD_RECOVERY_PATH}>Pedir novo link</TextLink>
+          {type === "invite" ? (
+            <TextLink href={LOGIN_PATH}>Ir para o login</TextLink>
+          ) : (
+            <TextLink href={PASSWORD_RECOVERY_PATH}>Pedir novo link</TextLink>
+          )}
         </p>
       ) : null}
     </form>
