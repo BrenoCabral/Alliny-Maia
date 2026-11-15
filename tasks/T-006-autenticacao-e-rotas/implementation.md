@@ -2628,18 +2628,18 @@ Nenhum agente edita o `CLAUDE.md`. O Breno aplica, se concordar. É o texto da s
 
 | # | Critério do `definition.md` | Passo | Prova | Resultado |
 | --- | --- | --- | --- | --- |
-| 1 | A admin de teste entra e cai em `/admin`. A cliente de teste entra e cai em `/cliente` | 11, 16 | `acesso.spec.ts`: "admin entra, fica na própria área e sai" e "cliente entra, fica na própria área e sai". `actions.test.ts`: sucesso de admin e de cliente em `signInAction` | |
-| 2 | Cliente que tenta abrir `/admin` é redirecionada. Visitante sem sessão vai para o login | 8, 13, 16 | `acesso.spec.ts`: "cliente entra, fica na própria área e sai" (abrir `/admin`) e "visitante sem sessão vai para o login". `routes.test.ts`: tabela de `decideAccess`. `proxy.test.ts`: casos 3 e 5 | |
-| 3 | Admin que tenta abrir `/cliente` é redirecionada para `/admin`. A cliente redirecionada de `/admin` cai em `/cliente` | 8, 13, 14, 16 | `acesso.spec.ts`: os dois primeiros testes. `routes.test.ts`: papel errado. `guards.test.ts`: `forbidden` vai para a área do papel | |
-| 4 | Depois de sair, abrir `/admin` ou `/cliente` leva ao login | 11, 16 | `acesso.spec.ts`: fim do teste da admin (`/admin` e `/cliente`) e fim do teste da cliente. `actions.test.ts`: `signOutAction` | |
-| 5 | Senha errada e e-mail inexistente mostram a mesma mensagem no login. O pedido de recuperação mostra a mesma resposta para e-mail cadastrado e não cadastrado | 9, 10, 16, 17 | `acesso.spec.ts`: "senha errada e e-mail inexistente mostram a mesma mensagem". `recuperacao.spec.ts`: "o pedido responde igual para e-mail cadastrado e não cadastrado". `service.test.ts`: equalização de `signIn` e de `requestPasswordRecovery` | |
-| 6 | Recuperação de senha funciona usando a caixa de e-mails local | 4, 5, 17 | `recuperacao.spec.ts`: "recuperação completa pela caixa de e-mails local" e "link de recuperação já usado não vale mais". Sonda do passo 5 | |
-| 7 | Não existe tela de cadastro público | 16, 18 | `acesso.spec.ts`: "não existe cadastro público". Listagem de `src/app/(auth)` no passo 18. `enable_signup = false` mantido no `config.toml` | |
-| 8 | Os testes de ponta a ponta passam local e no CI | 18, 23, 24 | `npm run test:e2e` com saída 0 nos passos 18 e 23. Execução de `ci/T-006-verde` com o job `e2e` verde | |
-| 9 | Os testes de ponta a ponta fazem o login pela tela, com as contas do seed, sem atalho por chave de servidor | 15, 18, 20 | `tests/e2e/support/app.ts` (`signIn` pela tela). Busca estática do passo 18 sem ocorrência de secret key, API do Auth ou `storageState`. O `.env.local` do job `e2e` só tem as duas variáveis públicas | |
-| 10 | O CI tem o job `e2e`, e os jobs `check` e `db` continuam com o mesmo nome e o mesmo comportamento | 20, 24, 25 | Diff do `ci.yml` com zero remoções e um bloco só no fim. Prova 1 com os três verdes. Prova 2 com `e2e` vermelho e `check` e `db` verdes | |
-| 11 | Sem as variáveis do Supabase, o build passa e a landing responde normalmente, como em produção hoje | 6, 13, 19, 24 | Script do passo 19 (`build exit 0`, `/` com 200, `/admin` com 307 para `/entrar`, aviso de indisponível). `proxy.test.ts`: caso 3 e matcher sem `/`. Job `check`, que faz o build sem variável nenhuma | |
-| 12 | Depois de `npm run test:e2e`, `npm run db:test` continua passando sem `npm run db:reset` no meio, ou o `docs/SETUP.md` diz que o reset é necessário | 18, 21, 23 | Sequência do passo 18, duas vezes, e do passo 23. Seção "Testes de ponta a ponta" do `docs/SETUP.md`, com o caso da rodada interrompida | |
+| 1 | A admin de teste entra e cai em `/admin`. A cliente de teste entra e cai em `/cliente` | 11, 16 | `acesso.spec.ts`: "admin entra, fica na própria área e sai" e "cliente entra, fica na própria área e sai". `actions.test.ts`: sucesso de admin e de cliente em `signInAction` | Atendido. `acesso.spec.ts` verde local e no CI (execução 43674053005) |
+| 2 | Cliente que tenta abrir `/admin` é redirecionada. Visitante sem sessão vai para o login | 8, 13, 16 | `acesso.spec.ts`: "cliente entra, fica na própria área e sai" (abrir `/admin`) e "visitante sem sessão vai para o login". `routes.test.ts`: tabela de `decideAccess`. `proxy.test.ts`: casos 3 e 5 | Atendido. `acesso.spec.ts`, `routes.test.ts` e `proxy.test.ts` verdes |
+| 3 | Admin que tenta abrir `/cliente` é redirecionada para `/admin`. A cliente redirecionada de `/admin` cai em `/cliente` | 8, 13, 14, 16 | `acesso.spec.ts`: os dois primeiros testes. `routes.test.ts`: papel errado. `guards.test.ts`: `forbidden` vai para a área do papel | Atendido. `acesso.spec.ts`, `routes.test.ts` e `guards.test.ts` verdes |
+| 4 | Depois de sair, abrir `/admin` ou `/cliente` leva ao login | 11, 16 | `acesso.spec.ts`: fim do teste da admin (`/admin` e `/cliente`) e fim do teste da cliente. `actions.test.ts`: `signOutAction` | Atendido. `acesso.spec.ts` e `actions.test.ts` verdes |
+| 5 | Senha errada e e-mail inexistente mostram a mesma mensagem no login. O pedido de recuperação mostra a mesma resposta para e-mail cadastrado e não cadastrado | 9, 10, 16, 17 | `acesso.spec.ts`: "senha errada e e-mail inexistente mostram a mesma mensagem". `recuperacao.spec.ts`: "o pedido responde igual para e-mail cadastrado e não cadastrado". `service.test.ts`: equalização de `signIn` e de `requestPasswordRecovery` | Atendido. `acesso.spec.ts`, `recuperacao.spec.ts` e `service.test.ts` verdes |
+| 6 | Recuperação de senha funciona usando a caixa de e-mails local | 4, 5, 17 | `recuperacao.spec.ts`: "recuperação completa pela caixa de e-mails local" e "link de recuperação já usado não vale mais". Sonda do passo 5 | Atendido. `recuperacao.spec.ts` verde e sonda do passo 5 com saída 0 quatro vezes |
+| 7 | Não existe tela de cadastro público | 16, 18 | `acesso.spec.ts`: "não existe cadastro público". Listagem de `src/app/(auth)` no passo 18. `enable_signup = false` mantido no `config.toml` | Atendido. Teste verde, `(auth)` sem rota de cadastro, `enable_signup = false` |
+| 8 | Os testes de ponta a ponta passam local e no CI | 18, 23, 24 | `npm run test:e2e` com saída 0 nos passos 18 e 23. Execução de `ci/T-006-verde` com o job `e2e` verde | Atendido. 11 de 11 em quatro rodadas locais e no job `e2e` da execução 43674053005 |
+| 9 | Os testes de ponta a ponta fazem o login pela tela, com as contas do seed, sem atalho por chave de servidor | 15, 18, 20 | `tests/e2e/support/app.ts` (`signIn` pela tela). Busca estática do passo 18 sem ocorrência de secret key, API do Auth ou `storageState`. O `.env.local` do job `e2e` só tem as duas variáveis públicas | Atendido. Login só pela tela, busca estática sem ocorrência, job sem a secret key |
+| 10 | O CI tem o job `e2e`, e os jobs `check` e `db` continuam com o mesmo nome e o mesmo comportamento | 20, 24, 25 | Diff do `ci.yml` com zero remoções e um bloco só no fim. Prova 1 com os três verdes. Prova 2 com `e2e` vermelho e `check` e `db` verdes | Atendido. Diff do `ci.yml` com 58 inserções e 0 remoções. Prova 1 verde (43674053005). Prova 2 com `e2e` vermelho e `check` e `db` verdes (43674362975) |
+| 11 | Sem as variáveis do Supabase, o build passa e a landing responde normalmente, como em produção hoje | 6, 13, 19, 24 | Script do passo 19 (`build exit 0`, `/` com 200, `/admin` com 307 para `/entrar`, aviso de indisponível). `proxy.test.ts`: caso 3 e matcher sem `/`. Job `check`, que faz o build sem variável nenhuma | Atendido. Script do passo 19 no resultado esperado, `proxy.test.ts` e job `check` verdes |
+| 12 | Depois de `npm run test:e2e`, `npm run db:test` continua passando sem `npm run db:reset` no meio, ou o `docs/SETUP.md` diz que o reset é necessário | 18, 21, 23 | Sequência do passo 18, duas vezes, e do passo 23. Seção "Testes de ponta a ponta" do `docs/SETUP.md`, com o caso da rodada interrompida | Atendido. `db:test` PASS depois do `test:e2e` sem reset, quatro vezes. Caso da rodada interrompida no `docs/SETUP.md` |
 
 Itens do escopo, notas do `pm` e pontos do `architect` sem critério próprio:
 
@@ -2735,6 +2735,8 @@ Preenchido pelo `dev-implementer` ao terminar. Não registre valores de chave, t
 
 **Estado em 2026-11-15: task NÃO concluída. Execução parada no passo 25 (prova 2 do CI), por regra de "Quando parar". O `BACKLOG.md` não foi marcado. Os passos 26 (parcial) e 27 não foram concluídos.**
 
+A linha acima e o bloqueio em "Pendências" ficam como histórico da primeira rodada. A task foi concluída depois, no mesmo dia: ver "Conclusão depois do adendo", no fim deste registro.
+
 ### O que foi feito
 
 Passos 1 a 24 executados e commitados, um commit por passo, na ordem do plano.
@@ -2780,3 +2782,30 @@ Os dez desvios da lista "Desvios deste plano em relação ao `architecture.md`" 
 - O `@playwright/test` 1.65.1 tinha um dia de publicado quando foi instalado. É a versão fixada pelo `architecture.md`.
 - O commit da `ci/T-006-verde` não recebeu status do Netlify. A conferência do proxy no Netlify continua sendo o item 3 da lista.
 - A stack local do Supabase ficou de pé, com o `config.toml` desta branch, para a continuação da task.
+
+### Conclusão depois do adendo
+
+**Estado em 2026-11-15: task concluída.** O `dev-planner` escreveu o "Adendo de 2026-11-15" (passos A1, A2 e A3), que resolve a parada do passo 25.
+
+O que foi feito:
+
+- **Passo A1.** `exact: true` nas cinco buscas por título e nas oito buscas por botão e link listadas no adendo. Nenhuma busca precisou perder o `exact`: os nomes acessíveis das telas são os do contrato. Nenhum arquivo de `src/` mudou. Lint, typecheck e 407 testes do Vitest com saída 0. `db:reset`, `npm run test:e2e` com 11 de 11 (Playwright 15,1 s, 23 s no total) e `db:test` com 54 testes PASS, sem reset no meio. Commit `2b4b9c9`.
+- **Passo A2.** Com o `h1` de `/admin` trocado para "Painel de prova", lint, typecheck e Vitest continuam com saída 0, e o teste "admin entra, fica na própria área e sai" falha local com `e2e exit 1`. Primeira linha do erro: `Error: expect(locator).toBeVisible() failed`, com `Locator: getByRole('heading', { name: 'Painel', exact: true, level: 1 })`. Nada foi enviado nesse passo, e a troca não ficou na branch da task.
+- **Passo 24 de novo, `ci/T-006-verde`:** execução 43674053005, `head_sha` 2b4b9c9, `success`, 150 s no total. `check` 40 s, `db` 66 s, `e2e` 148 s (Instalar dependências 12 s, Instalar navegador 23 s, Subir o Supabase 72 s, Gerar variáveis de ambiente 1 s, Testes de ponta a ponta 24 s). Dentro do orçamento de 10 minutos, sem contingência. O commit não recebeu status do Netlify: conferência oportunista não feita.
+- **Passo 25 de novo, `ci/T-006-prova-e2e`:** execução 43674362975, `head_sha` 2d860f6, `failure`. `e2e` com `failure` no passo "Testes de ponta a ponta" (34 s), passos anteriores `success` e "Resumo da falha" `success`. `check` e `db` com `success`. Anotações do `e2e`: duas do reporter `github` em `tests/e2e/support/app.ts` com o teste "admin entra, fica na própria área e sai" (`Error: expect(locator).toBeVisible() failed`), o resumo do Playwright com "1 failed" e a anotação "Resumo da falha (e2e)".
+- **Passo 26:** `ci/T-006-verde` e `ci/T-006-prova-e2e` apagadas do remoto, e a local de prova também. `git ls-remote --heads origin "ci/*"` sem saída.
+- **Histórico das provas da primeira rodada**, que deixaram de valer: verde 43673113171 (sha d348083) e a prova que voltou verde, 43673444187 (sha bcd90bd).
+- **Passo 27:** `npm run check` com saída 0, registro, mapa de critérios, `BACKLOG.md` e push da branch da task. A stack local ficou de pé a pedido do orquestrador, com a porta 3000 livre.
+
+Desvios do plano, acrescentados:
+
+9. **Erro do plano no passo 15: buscas por papel sem `exact`.** Corrigido pelo adendo (passo A1).
+10. **Só um teste falha na prova 2, não quatro.** O adendo previa a falha de todos os testes que entram como admin. Os testes de retorno à origem e de destino externo usam `submitSignIn` e conferem só a URL, sem passar pelo `signIn` que confere o título. A prova cumpre o papel do mesmo jeito: `e2e` vermelho no passo certo, com a anotação do teste.
+11. **O adendo entrou em commit próprio** (`7f9bc14`), antes do commit do passo A1.
+12. **Passo 27.5:** o `npm run db:stop` não foi executado. O orquestrador pediu a stack de pé para conferir o merge.
+
+Pendências:
+
+- O bloqueio da primeira rodada está resolvido. Não há verificação pendente do agente.
+- Para o Breno: a lista "Pendências para o Breno já conhecidas", com dois ajustes. No item 7, a stack local ficou de pé (não parada), com o `config.toml` desta branch. E os três pontos de "Para o Breno" registrados acima continuam valendo (Playwright com um dia de publicado, Netlify sem status no commit, `connection()` em `src/lib/supabase/server.ts` para o `architect` conferir).
+- Sugestão de task para o `pm`: os testes de retorno à origem e de destino externo poderiam conferir também o título da área, para que uma tela quebrada depois do login apareça em mais de um teste.
