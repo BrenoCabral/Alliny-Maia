@@ -2530,6 +2530,88 @@ git ls-remote --heads origin "ci/*"                            # nada
 git rev-parse origin/release/T-004-T-005                       # o mesmo hash do passo 1: a branch de integração não recebeu push
 ```
 
+## Adendo de 2026-11-15: buscas exatas nos testes de ponta a ponta
+
+Escrito pelo `dev-planner` depois da parada do passo 25. Vale a partir da branch em `7bc8f46`, com os passos 1 a 24 feitos. Não apague nem reescreva o que já está em "Registro": acrescente.
+
+**O que aconteceu.** A `ci/T-006-prova-e2e` voltou verde. A prova troca o `h1` de `/admin` de "Painel" para "Painel de prova", e os testes buscam o título com `getByRole("heading", { level: 1, name })` sem `exact`. Conferido nos tipos do Playwright 1.65.1 instalado (`node_modules/playwright-core/types/types.d.ts`, opções `name` e `exact` de `getByRole`): por padrão o nome casa por trecho e sem diferenciar maiúsculas, e `exact: true` exige o texto inteiro, com maiúsculas e minúsculas. "Painel de prova" contém "Painel", então o teste passava. É erro do plano (passo 15), não das telas. A causa relatada pelo implementer está certa e `exact: true` resolve.
+
+**O que não precisa mudar.** `toHaveText` com texto compara o texto inteiro (as mensagens da tabela 5.4 já estão fixadas), `toHaveURL` com texto compara a URL inteira, e as buscas com expressão regular do teste "não existe cadastro público" são frouxas de propósito. Os `getByLabel` ficam como estão ("Senha" já tem `exact: true`).
+
+### Passo A1. `exact: true` nas buscas por título, botão e link
+
+**O que fazer:** fixar o nome inteiro nas buscas por papel que usam texto de contrato.
+
+**Arquivos a alterar (são os testes do passo):**
+
+Títulos, obrigatório. Em cada linha, acrescentar `exact: true` ao objeto de opções, por exemplo `{ level: 1, name: "Entrar", exact: true }`:
+
+| Arquivo | Linha | Busca |
+| --- | --- | --- |
+| `tests/e2e/support/app.ts` | 42 | `name: account.heading` (cobre "Painel" e "Sua área" em todo `signIn`) |
+| `tests/e2e/acesso.spec.ts` | 48 | "Sua área" |
+| `tests/e2e/acesso.spec.ts` | 62 | "Entrar" |
+| `tests/e2e/acesso.spec.ts` | 108 | "Entrar" |
+| `tests/e2e/recuperacao.spec.ts` | 75 | "Sua área" |
+
+São cinco linhas (o relato fala em seis buscas: a linha 42 do apoio serve às duas áreas).
+
+Botões e link, mesmo afrouxamento e mesmo contrato (seção 6.1 do `architecture.md`). Acrescentar `exact: true`:
+
+| Arquivo | Linha | Busca |
+| --- | --- | --- |
+| `tests/e2e/support/app.ts` | 29 | botão "Entrar" |
+| `tests/e2e/support/app.ts` | 47 | botão "Sair" |
+| `tests/e2e/recuperacao.spec.ts` | 27 | botão "Enviar link" |
+| `tests/e2e/recuperacao.spec.ts` | 67 e 101 | botão "Continuar" |
+| `tests/e2e/recuperacao.spec.ts` | 72 e 94 | botão "Salvar senha" |
+| `tests/e2e/recuperacao.spec.ts` | 104 | link "Pedir novo link" |
+
+Nenhum arquivo de `src/` muda. Se, com `exact: true`, um botão ou o link deixar de ser encontrado, o nome acessível da tela não é exatamente o do contrato: tire o `exact` só dessa busca, anote em "Desvios do plano" com o nome real, e não mexa na tela neste adendo. Nos cinco títulos o `exact` é obrigatório: se um título falhar, pare e relate.
+
+**Verificação**, com a stack de pé a partir desta worktree, a conferência de containers e de porta 3000 e a janela do limite de login vazia (a rodada gasta 9 logins):
+
+```bash
+npx prettier --write tests/e2e/support/app.ts tests/e2e/acesso.spec.ts tests/e2e/recuperacao.spec.ts
+npm run lint && npm run typecheck && npm run test ; echo "exit $?"      # 0
+npm run db:reset ; echo "reset exit $?"
+npm run test:e2e ; echo "e2e exit $?"                                   # 0: 11 testes
+npm run db:test  ; echo "db:test exit $?"                               # 0, sem reset no meio
+git diff --stat                                                          # só os três arquivos de tests/e2e
+git add tests/e2e/support/app.ts tests/e2e/acesso.spec.ts tests/e2e/recuperacao.spec.ts
+git commit -m "test(e2e): buscas exatas por título, botão e link (T-006)" -m "Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>" -- tests/e2e/support/app.ts tests/e2e/acesso.spec.ts tests/e2e/recuperacao.spec.ts
+```
+
+### Passo A2. Conferir local que a prova fica vermelha, antes de gastar CI
+
+**O que fazer:** preparar a branch de prova a partir do commit novo e ver, na máquina, que a troca do `h1` agora derruba o teste. Nada é enviado neste passo.
+
+A quebra da prova 2 **continua a mesma** do passo 25: em `src/app/admin/page.tsx`, o texto do `h1` passa de `Painel` para `Painel de prova` (o `metadata.title` fica). O que muda é a ordem: a conferência local com um teste de ponta a ponta vem antes de qualquer push. O passo 25 dizia para não rodar e2e na prova; aqui roda um teste só, que gasta 1 login.
+
+```bash
+git switch -c ci/T-006-prova-e2e task/T-006-autenticacao-e-rotas
+# editar o h1 de src/app/admin/page.tsx
+npm run lint && npm run typecheck && npm run test ; echo "exit $?"      # 0: check continua verde
+git add src/app/admin/page.tsx
+git commit -m "ci: prova e2e, não mesclar (T-006)" -- src/app/admin/page.tsx
+npm run build && npx playwright test tests/e2e/acesso.spec.ts -g "admin entra" ; echo "e2e exit $?"     # 1
+git switch task/T-006-autenticacao-e-rotas
+git status --short                                                       # vazio
+grep -c "Painel de prova" src/app/admin/page.tsx                         # 0
+```
+
+Esperado: `e2e exit 1`, com o teste "admin entra, fica na própria área e sai" falhando na espera do título "Painel" dentro de `signIn`. Anote a primeira linha do erro. Se sair `0`, pare e relate: há outra causa além do `exact`.
+
+O `.next` ficou com o build da prova. O próximo `npm run test:e2e` refaz o build. Não rode `npx playwright test` sozinho na branch da task antes disso.
+
+### Passo A3. Repetir os passos 24 e 25 no commit novo e seguir
+
+1. **Passo 24 de novo,** inteiro, com o `head_sha` do commit do passo A1: `git push origin task/T-006-autenticacao-e-rotas:refs/heads/ci/T-006-verde`, três jobs verdes, tempos anotados. A execução verde anterior (em commit mais antigo) deixa de valer para o item 10 da "Verificação final", porque o commit novo não é só `.md`. A conferência oportunista do Netlify se repete com o `SHA` novo.
+2. **Passo 25,** só a parte de envio e observação: a branch local `ci/T-006-prova-e2e` já existe do passo A2, então pule a criação, a edição e o commit e vá direto ao `git push origin ci/T-006-prova-e2e`, depois que a `ci/T-006-verde` terminar verde. Resultado esperado e leitura dos desvios são os do passo 25, sem mudança: `e2e` vermelho em "Testes de ponta a ponta", com anotação do teste, e `check` e `db` verdes. Como `signIn` confere o título, vão falhar todos os testes que entram como admin (o da admin, o de retorno à origem e os dois de destino externo), cada um duas vezes por causa da repetição no CI. É esperado.
+3. **Passos 26 e 27** como estão. No 27.1, o `head_sha` da comparação é o da execução verde nova. Em "Registro", acrescente abaixo do que já existe: este adendo, a execução verde antiga e a prova que voltou verde (com os ids, como histórico), e as duas execuções novas. Em "Desvios do plano", acrescente: erro do plano no passo 15 (buscas sem `exact`), corrigido por este adendo.
+
+Confira o `rate_limit` antes: as duas provas repetidas gastam até 30 chamadas somadas.
+
 ## Texto sugerido para o `CLAUDE.md`
 
 Nenhum agente edita o `CLAUDE.md`. O Breno aplica, se concordar. É o texto da seção 9.5 do `architecture.md`.
