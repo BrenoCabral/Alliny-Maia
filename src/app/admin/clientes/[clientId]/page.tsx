@@ -13,19 +13,10 @@ import { getClient } from "@/modules/clients/service";
 
 type Props = PageProps<"/admin/clientes/[clientId]">;
 
-const FALLBACK_TITLE = "Cliente";
-
-// O título da aba é o nome da cliente. Sem sessão de admin, ou com id que não
-// existe, fica o título fixo: quem decide o que a pessoa vê é a página.
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { clientId } = await params;
-  try {
-    const client = await getClient(clientId);
-    return { title: client?.fullName ?? FALLBACK_TITLE };
-  } catch {
-    return { title: FALLBACK_TITLE };
-  }
-}
+// Título fixo: generateMetadata com o nome da cliente depende da sessão, e o
+// build sem as variáveis do Supabase (job check do CI, Deploy Preview) recusa
+// metadado que bloqueia uma rota pré-renderizável. O nome está no h1.
+export const metadata: Metadata = { title: "Cliente" };
 
 const dateTime = new Intl.DateTimeFormat("pt-BR", {
   dateStyle: "short",
