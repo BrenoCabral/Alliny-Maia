@@ -110,7 +110,12 @@ describe("emailLinkSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it.each(["invite", "signup"])("recusa o tipo %s", (type) => {
+  it("aceita token e tipo invite", () => {
+    const input = { tokenHash: "abc", type: "invite" };
+    expect(emailLinkSchema.parse(input)).toEqual(input);
+  });
+
+  it.each(["signup", "magiclink"])("recusa o tipo %s", (type) => {
     const result = emailLinkSchema.safeParse({ tokenHash: "abc", type });
     expect(result.success).toBe(false);
   });
@@ -183,6 +188,9 @@ describe("authMessages", () => {
       recoveryRequested:
         "Se este e-mail tiver cadastro, você vai receber um link para redefinir a senha.",
       invalidLink: "Este link não vale mais. Peça um novo.",
+      invalidInvite:
+        "Este convite não vale mais. Se você já criou a sua senha, entre com ela. Se não, peça um novo convite à Alliny.",
+      inviteIntro: "Toque em continuar para criar a sua senha.",
       passwordPolicy:
         "A senha precisa ter pelo menos 10 caracteres, com letras e números.",
       passwordMismatch: "As senhas não são iguais.",

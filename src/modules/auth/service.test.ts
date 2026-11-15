@@ -490,7 +490,7 @@ describe("confirmEmailLink", () => {
   it.each([
     ["sem tokenHash", { type: "recovery" }],
     ["tokenHash vazio", { tokenHash: "", type: "recovery" }],
-    ["tipo invite", { tokenHash: "hash-inventado", type: "invite" }],
+    ["tipo signup", { tokenHash: "hash-inventado", type: "signup" }],
     ["null", null],
   ])("devolve invalid_link para %s", async (_label, input) => {
     await expect(confirmEmailLink(input)).resolves.toEqual({
@@ -506,6 +506,17 @@ describe("confirmEmailLink", () => {
       fakeClient,
       "hash-inventado",
       "recovery",
+    );
+  });
+
+  it("com o tipo invite, chama o repositório com invite", async () => {
+    await expect(
+      confirmEmailLink({ tokenHash: "hash-inventado", type: "invite" }),
+    ).resolves.toEqual({ ok: true });
+    expect(mocks.verifyEmailLink).toHaveBeenCalledWith(
+      fakeClient,
+      "hash-inventado",
+      "invite",
     );
   });
 

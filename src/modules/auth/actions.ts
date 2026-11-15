@@ -123,7 +123,11 @@ export async function confirmEmailLinkAction(
       case "unavailable":
         return failure(authMessages.unavailable);
       default:
-        return failure(authMessages.invalidLink);
+        return failure(
+          formData.get("type") === "invite"
+            ? authMessages.invalidInvite
+            : authMessages.invalidLink,
+        );
     }
   }
 

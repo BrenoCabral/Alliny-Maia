@@ -243,6 +243,40 @@ describe("confirmEmailLinkAction", () => {
   });
 });
 
+describe("confirmEmailLinkAction com convite", () => {
+  const invite = { token_hash: "hash-inventado", type: "invite" };
+  const run = (fields: Record<string, string>) =>
+    confirmEmailLinkAction(IDLE, form(fields));
+
+  it("vai para /definir-senha e repassa o tipo invite", async () => {
+    await expect(redirectOf(() => run(invite))).resolves.toBe("/definir-senha");
+    expect(mocks.confirmEmailLink).toHaveBeenCalledWith({
+      tokenHash: "hash-inventado",
+      type: "invite",
+    });
+  });
+
+  it.each([
+    ["invalid_link", authMessages.invalidInvite],
+    ["rate_limited", authMessages.rateLimited],
+    ["unavailable", authMessages.unavailable],
+  ])("%s mostra a mensagem do motivo", async (reason, message) => {
+    mocks.confirmEmailLink.mockResolvedValue({ ok: false, reason });
+    await expect(run(invite)).resolves.toEqual({ status: "error", message });
+    expect(mocks.redirect).not.toHaveBeenCalled();
+  });
+
+  it("tipo desconhecido continua com a mensagem de link inválido", async () => {
+    mocks.confirmEmailLink.mockResolvedValue({
+      ok: false,
+      reason: "invalid_link",
+    });
+    await expect(
+      run({ token_hash: "hash-inventado", type: "signup" }),
+    ).resolves.toEqual({ status: "error", message: authMessages.invalidLink });
+  });
+});
+
 describe("setNewPasswordAction", () => {
   const valid = { password: NEW_PASSWORD, passwordConfirmation: NEW_PASSWORD };
   const run = (fields: Record<string, string>) =>

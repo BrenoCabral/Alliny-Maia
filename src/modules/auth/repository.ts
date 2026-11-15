@@ -8,7 +8,7 @@ import {
 
 import type { Database } from "@/lib/supabase/database.types";
 
-import type { AppRole } from "./schemas";
+import type { AppRole, EmailLinkType } from "./schemas";
 
 export type SessionClaims = { userId: string; email: string | null };
 
@@ -169,7 +169,7 @@ export async function sendPasswordRecovery(
 export async function verifyEmailLink(
   client: SupabaseClient<Database>,
   tokenHash: string,
-  type: "recovery",
+  type: EmailLinkType,
 ): Promise<AuthCallResult> {
   try {
     const { error } = await client.auth.verifyOtp({

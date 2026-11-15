@@ -210,6 +210,18 @@ describe("chamadas ao Auth", () => {
     });
   });
 
+  it("verifyEmailLink aceita o tipo invite", async () => {
+    const { client, fn } = clientWithAuth("verifyOtp", {
+      data: {},
+      error: null,
+    });
+    await verifyEmailLink(client, TOKEN_HASH, "invite");
+    expect(fn).toHaveBeenCalledWith({
+      type: "invite",
+      token_hash: TOKEN_HASH,
+    });
+  });
+
   it("updatePassword passa a senha", async () => {
     const { client, fn } = clientWithAuth("updateUser", {
       data: {},

@@ -28,6 +28,9 @@ export const authMessages = {
   recoveryRequested:
     "Se este e-mail tiver cadastro, você vai receber um link para redefinir a senha.",
   invalidLink: "Este link não vale mais. Peça um novo.",
+  invalidInvite:
+    "Este convite não vale mais. Se você já criou a sua senha, entre com ela. Se não, peça um novo convite à Alliny.",
+  inviteIntro: "Toque em continuar para criar a sua senha.",
   passwordPolicy:
     "A senha precisa ter pelo menos 10 caracteres, com letras e números.",
   passwordMismatch: "As senhas não são iguais.",
@@ -56,11 +59,14 @@ export const passwordRecoverySchema = z.object({
   email: emailSchema,
 });
 
-// A T-007 acrescenta "invite" ao tipo.
+// Tipos de link de e-mail que o app confirma: recuperação de senha (T-006) e
+// convite (T-007). Os dois chegam em /confirmar-acesso.
 export const emailLinkSchema = z.object({
   tokenHash: z.string().min(1).max(256),
-  type: z.enum(["recovery"]),
+  type: z.enum(["recovery", "invite"]),
 });
+
+export type EmailLinkType = z.infer<typeof emailLinkSchema>["type"];
 
 // Letra e dígito em ASCII, de propósito: é o que a opção letters_digits do
 // Auth exige.
